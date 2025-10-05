@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/home/koleno/projects/study/cpp/asrd/build",
+  "command": "/usr/bin/c++  -I/home/koleno/projects/study/cpp/asrd/include -isystem /usr/include/python3.13 -isystem /home/koleno/projects/study/cpp/asrd/external/pybind11/include -std=gnu++17 -I/usr/include -o CMakeFiles/ShipRoomDesigner.dir/src/graphics/cube.cpp.o -c /home/koleno/projects/study/cpp/asrd/src/graphics/cube.cpp",
+  "file": "/home/koleno/projects/study/cpp/asrd/src/graphics/cube.cpp",
+  "output": "CMakeFiles/ShipRoomDesigner.dir/src/graphics/cube.cpp.o"
+},
+{
+  "directory": "/home/koleno/projects/study/cpp/asrd/build",
+  "command": "/usr/bin/c++  -I/home/koleno/projects/study/cpp/asrd/include -isystem /usr/include/python3.13 -isystem /home/koleno/projects/study/cpp/asrd/external/pybind11/include -std=gnu++17 -I/usr/include -o CMakeFiles/ShipRoomDesigner.dir/src/main.cpp.o -c /home/koleno/projects/study/cpp/asrd/src/main.cpp",
+  "file": "/home/koleno/projects/study/cpp/asrd/src/main.cpp",
+  "output": "CMakeFiles/ShipRoomDesigner.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/koleno/projects/study/cpp/asrd/build",
+  "command": "/usr/bin/c++  -I/home/koleno/projects/study/cpp/asrd/include -isystem /usr/include/python3.13 -isystem /home/koleno/projects/study/cpp/asrd/external/pybind11/include -std=gnu++17 -I/usr/include -o CMakeFiles/ShipRoomDesigner.dir/src/pybind/python_bindings.cpp.o -c /home/koleno/projects/study/cpp/asrd/src/pybind/python_bindings.cpp",
+  "file": "/home/koleno/projects/study/cpp/asrd/src/pybind/python_bindings.cpp",
+  "output": "CMakeFiles/ShipRoomDesigner.dir/src/pybind/python_bindings.cpp.o"
+},
+{
+  "directory": "/home/koleno/projects/study/cpp/asrd/build",
+  "command": "/usr/bin/c++ -Dpybind_module_EXPORTS -I/home/koleno/projects/study/cpp/asrd/include -isystem /usr/include/python3.13 -isystem /home/koleno/projects/study/cpp/asrd/external/pybind11/include -std=gnu++17 -fPIC -fvisibility=hidden -flto=auto -fno-fat-lto-objects -o CMakeFiles/pybind_module.dir/src/pybind/python_bindings.cpp.o -c /home/koleno/projects/study/cpp/asrd/src/pybind/python_bindings.cpp",
+  "file": "/home/koleno/projects/study/cpp/asrd/src/pybind/python_bindings.cpp",
+  "output": "CMakeFiles/pybind_module.dir/src/pybind/python_bindings.cpp.o"
+}
+]
