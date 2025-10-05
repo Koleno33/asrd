@@ -1,28 +1,48 @@
-#ifndef CUBE_H
-#define CUBE_H
+#ifndef OBJECT_H
+#define OBJECT_H
 
 #include <raylib.h>
-#include <vector>
-#include <cmath>
-#include <cstdint>
+#include <atomic>
 
-class Object 
+#ifdef _WIN32
+    #ifdef BUILDING_DLL
+        #define OBJECT_API __declspec(dllexport)
+    #else
+        #define OBJECT_API __declspec(dllimport)
+    #endif
+#else
+    #define OBJECT_API __attribute__((visibility("default")))
+#endif
+
+class OBJECT_API Object 
 {
-private:
+protected:
+  static std::atomic<uint64_t> nextid;
   uint64_t id;
   Vector3 position;
 
+  // Защищенный конструктор для использования в производных классах
+  Object(const Vector3& pos);
+
 public:
-  // Конструктор по умолчанию
-  Object() : id(0), position({0,0,0}) {}
+  virtual ~Object() = default;
+
+  // Удаляем копирование и присваивание для сохранения уникальности ID
+  Object(const Object&) = delete;
+  Object& operator=(const Object&) = delete;
 
   // Методы доступа
-  uint64_t getId() const { return id; }
-  Vector3 getPosition() const { return position; }
+  uint64_t get_id() const;
+  Vector3 get_position() const;
 
   // Сеттеры
-  void setId(uint64_t newId) { id = newId; }
-  void setPosition(Vector3 newPos) { position = newPos; }
+  void set_position(const Vector3& new_pos);
+
+  // Абстрактный метод для отрисовки
+  virtual void draw() const = 0;
+
+  // Абстрактный метод для получения типа объекта
+  virtual const char* get_type() const = 0;
 };
 
 #endif

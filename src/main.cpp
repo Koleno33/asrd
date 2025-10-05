@@ -22,61 +22,64 @@ int main(void)
 
   std::vector<Cube*> cubes;
 
-  Cube* cube1 = new Cube();
-  cube1->setPosition((Vector3){ 0.0f, 0.0f, 0.0f });
-  cube1->setSize((Vector3){ 2.0f, 2.0f, 2.0f });
-  cube1->setId(1);
-  
-  Cube* cube2 = new Cube();
-  cube2->setPosition((Vector3){ -3.0f, 0.0f, -3.0f });
-  cube2->setSize((Vector3){ 2.0f, 2.0f, 2.0f });
-  cube2->setId(2);
+  Cube* cube1 = new Cube(
+    (Vector3){ 0.0f, 0.0f, 0.0f },
+    (Vector3){ 2.0f, 2.0f, 2.0f }
+  );
 
+  Cube* cube2 = new Cube(
+    (Vector3){ -3.0f, 0.0f, -3.0f },
+    (Vector3){ 2.0f, 2.0f, 2.0f }
+  );
+  
   cubes.push_back(cube1);
   cubes.push_back(cube2);
 
-  CubeValidator validator;
+  CubeValidator validator { };
 
   while (!WindowShouldClose()) {
-      // Обновление
-      //UpdateCamera(&camera, CAMERA_ORBITAL); // Вращение камеры вокруг объекта
+    // Обновление
+    UpdateCamera(&camera, CAMERA_ORBITAL); // Вращение камеры вокруг объекта
 
-      Color validationColor = validator.validate_cubes(cubes);
+    Color valcolor = validator.validate_cubes(cubes);
 
-      BeginDrawing();
-      ClearBackground(RAYWHITE);
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
 
-      BeginMode3D(camera);
+    BeginMode3D(camera);
 
-      // Отрисовка кубов
-      for (const auto& cube : cubes) {
-          DrawCubeV(cube->getPosition(), cube->getSize(), validationColor);
-          DrawCubeWiresV(cube->getPosition(), cube->getSize(), DARKGRAY);
-      }
+    // Отрисовка кубов
+    for (const auto& cube : cubes) {
+      DrawCubeV(cube->get_position(), cube->get_size(), valcolor);
+      DrawCubeWiresV(cube->get_position(), cube->get_size(), DARKGRAY);
+    }
 
-      // Оси
-      DrawGrid(10, 1.0f);
+    // Оси
+    DrawGrid(10, 1.0f);
 
-      EndMode3D(); // Конец 3D-режима
-                   
-      // Отображаем статус валидации
-      const char* statusText;
-      int colnum = ColorToInt(validationColor);
-      if (colnum == ColorToInt(GREEN)) {
-          statusText = "OK";
-      } else if (colnum == ColorToInt(ORANGE)) {
-          statusText = "VIOLATED";
-      } else if (colnum == ColorToInt(RED)) {
-          statusText = "INVALID";
-      } else {
-          statusText = "UNKNOWN";
-      }
+    EndMode3D(); // Конец 3D-режима
+                 
+    // Отображаем статус валидации
+    const char* status;
+    int colnum = ColorToInt(valcolor);
+    if (colnum == ColorToInt(GREEN)) {
+      status = "OK";
+    }
+    else if (colnum == ColorToInt(ORANGE)) {
+      status = "VIOLATED";
+    }
+    else if (colnum == ColorToInt(RED)) {
+      status = "INVALID";
+    }
+    else {
+      status = "UNKNOWN";
+    }
 
-      DrawText("AI Ship Room Designer", 10, 10, 20, DARKGRAY);
-      DrawText(TextFormat("Status: %s", statusText), 10, 40, 20, validationColor);
-      DrawFPS(10, 70);
+    DrawText("AI Ship Room Designer", 10, 10, 20, DARKGRAY);
+    DrawText(TextFormat("Status: %s", status), 10, 40, 20, valcolor);
+    DrawFPS(10, 70);
 
-      EndDrawing(); // Конец рисования
+    EndDrawing(); // Конец рисования
   }
 
   for (auto cube : cubes) {

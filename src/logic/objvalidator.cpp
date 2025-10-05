@@ -1,4 +1,5 @@
 #include <logic/objvalidator.h>
+#include <iostream>
 
 CubeValidator::CubeValidator() 
 {
@@ -20,7 +21,7 @@ Color CubeValidator::validate_cubes(const std::vector<Cube*>& cubes)
 
     py::list cube_list;
     for (Cube* cube : cubes) {
-        cube_list.append(py::cast(cube));
+      cube_list.append(py::cast(cube));
     }
 
     py::dict valres = validator_module.attr("validate")(cube_list);

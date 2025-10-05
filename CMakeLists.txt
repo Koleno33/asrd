@@ -45,6 +45,7 @@ target_link_libraries(ShipRoomDesigner
 pybind11_add_module(cubes_module
   ${SRC_DIR}/pybind/cube_bindings.cpp
   ${SRC_DIR}/graphics/cube.cpp
+  ${SRC_DIR}/graphics/object.cpp
 )
 target_include_directories(cubes_module PRIVATE ${INCLUDE_DIR})
 target_link_libraries(cubes_module PRIVATE pybind11::module)

@@ -1,19 +1,12 @@
 #ifndef OBJVALIDATOR_H
 #define OBJVALIDATOR_H
 
-#include <exception>
 #include <pybind11/embed.h>
-#include <pybind11/pytypes.h>
-#include <pybind11/stl.h>
-#include <pylifecycle.h>
-#include <vector>
 #include <graphics/cube.h>
-#include <iostream>
-#include <filesystem>
 
 namespace py = pybind11;
 
-class __attribute__((visibility("default"))) CubeValidator
+class OBJECT_API CubeValidator
 {
 public:
   CubeValidator();
