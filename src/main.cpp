@@ -140,7 +140,8 @@ int main(void)
 
     DrawText("AI Ship Room Designer", 10, 10, 20, DARKGRAY);
     DrawText(TextFormat("Status: %s", status), 10, 40, 20, valcolor);
-    DrawFPS(10, 70);
+    DrawText(TextFormat("Distance: %.2f", cube1->calculate_distance(*cube2)), 10, 70, 20, valcolor);
+    DrawFPS(10, 100);
 
     EndDrawing(); // Конец рисования
   }
