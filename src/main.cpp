@@ -7,14 +7,14 @@
 
 int main(void) 
 {
-  constexpr int screenWidth  = 800;
-  constexpr int screenHeight = 450;
+  constexpr int screen_width  = 800;
+  constexpr int screen_height = 450;
 
-  InitWindow(screenWidth, screenHeight, "AI Ship Room Designer");
+  InitWindow(screen_width, screen_height, "AI Ship Room Designer");
 
   Camera camera = { 0 };
   camera.position = (Vector3){ 10.0f, 5.0f, 0.0f };   // Позиция камеры
-  camera.target = (Vector3){ 0.0f, 5.0f, 10.0f };      // Куда смотрит камера
+  camera.target = (Vector3){ 0.0f, 5.0f, 10.0f };     // Куда смотрит камера
   camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Вверх (обычно вектор (0,1,0))
   camera.fovy = 45.0f;                                // Поле зрения
   camera.projection = CAMERA_PERSPECTIVE;             // Тип проекции
@@ -80,14 +80,24 @@ int main(void)
     };
     right = Vector3Normalize(right);
 
-    if (IsKeyDown(KEY_W)) camera.position = Vector3Add(camera.position, Vector3Scale(forward, movspeed));
-    if (IsKeyDown(KEY_S)) camera.position = Vector3Subtract(camera.position, Vector3Scale(forward, movspeed));
-    if (IsKeyDown(KEY_D)) camera.position = Vector3Add(camera.position, Vector3Scale(right, movspeed));
-    if (IsKeyDown(KEY_A)) camera.position = Vector3Subtract(camera.position, Vector3Scale(right, movspeed));
-    if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) 
-        camera.position.y -= movspeed;
-    if (IsKeyDown(KEY_SPACE)) 
-        camera.position.y += movspeed;
+    if (IsKeyDown(KEY_W)) {
+      camera.position = Vector3Add(camera.position, Vector3Scale(forward, movspeed));
+    }
+    if (IsKeyDown(KEY_S)) {
+      camera.position = Vector3Subtract(camera.position, Vector3Scale(forward, movspeed));
+    }
+    if (IsKeyDown(KEY_D)) {
+      camera.position = Vector3Add(camera.position, Vector3Scale(right, movspeed));
+    }
+    if (IsKeyDown(KEY_A)) {
+      camera.position = Vector3Subtract(camera.position, Vector3Scale(right, movspeed));
+    }
+    if (IsKeyDown(KEY_LEFT_SHIFT)) {
+      camera.position.y -= movspeed;
+    }
+    if (IsKeyDown(KEY_SPACE)) {
+      camera.position.y += movspeed;
+    }
 
     // Рассчитываем новый target на основе углов
     Vector3 new_direction = {
@@ -113,8 +123,8 @@ int main(void)
 
     // Отрисовка кубов
     for (const auto& cube : cubes) {
-      DrawCubeV(cube->get_position(), cube->get_size(), valcolor);
-      DrawCubeWiresV(cube->get_position(), cube->get_size(), DARKGRAY);
+      cube->set_color(valcolor);
+      cube->draw();
     }
 
     // Оси

@@ -5,13 +5,13 @@
 #include <atomic>
 
 #ifdef _WIN32
-    #ifdef BUILDING_DLL
-        #define OBJECT_API __declspec(dllexport)
-    #else
-        #define OBJECT_API __declspec(dllimport)
-    #endif
+  #ifdef BUILDING_DLL
+    #define OBJECT_API __declspec(dllexport)
+  #else
+    #define OBJECT_API __declspec(dllimport)
+  #endif
 #else
-    #define OBJECT_API __attribute__((visibility("default")))
+  #define OBJECT_API __attribute__((visibility("default")))
 #endif
 
 class OBJECT_API Object 
