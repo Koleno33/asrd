@@ -42,13 +42,14 @@ target_link_libraries(ShipRoomDesigner
 )
 
 # Модуль cpp для Python
-pybind11_add_module(cubes_module
-  ${SRC_DIR}/pybind/cube_bindings.cpp
+pybind11_add_module(objects_module
+  ${SRC_DIR}/pybind/bindings.cpp
   ${SRC_DIR}/graphics/cube.cpp
+  ${SRC_DIR}/graphics/sphere.cpp
   ${SRC_DIR}/graphics/object.cpp
 )
-target_include_directories(cubes_module PRIVATE ${INCLUDE_DIR})
-target_link_libraries(cubes_module PRIVATE pybind11::module)
+target_include_directories(objects_module PRIVATE ${INCLUDE_DIR})
+target_link_libraries(objects_module PRIVATE pybind11::module)
 
 # add_custom_target(copy_assets ALL
 #     COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -66,16 +67,16 @@ add_custom_target(copy_python_files ALL
 )
 
 # Убедимся, что модуль компилируется в нужную директорию
-set_target_properties(cubes_module PROPERTIES
+set_target_properties(objects_module PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     PREFIX ""
     SUFFIX ""
 )
 
 if (WIN32)
-    set_target_properties(cubes_module PROPERTIES SUFFIX ".pyd")
+    set_target_properties(objects_module PROPERTIES SUFFIX ".pyd")
 else()
-    set_target_properties(cubes_module PROPERTIES SUFFIX ".so")
+    set_target_properties(objects_module PROPERTIES SUFFIX ".so")
 endif()
 
 # Опции для релокации исполняемого и поиска модулей
@@ -87,5 +88,5 @@ include_directories(${INCLUDE_DIR})
 
 # Добавляем зависимость от копирования Python файлов
 add_dependencies(ShipRoomDesigner copy_python_files)
-add_dependencies(cubes_module copy_python_files)
+add_dependencies(objects_module copy_python_files)
 

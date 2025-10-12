@@ -18,8 +18,18 @@ Vector3 Object::get_position() const
   return position;
 }
 
+Color Object::get_color() const
+{
+  return color;
+}
+
 void Object::set_position(const Vector3& newpos) 
 {
   position = newpos;
+}
+
+void Object::set_color(Color newcolor) 
+{
+  color = newcolor;
 }
 

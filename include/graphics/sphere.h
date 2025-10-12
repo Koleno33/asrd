@@ -1,20 +1,23 @@
-#ifndef CUBE_H
-#define CUBE_H
+#ifndef SPHERE_H
+#define SPHERE_H
 
 #include <graphics/object.h>
 
-class OBJECT_API Cube : public Object {
+class OBJECT_API Sphere : public Object {
 private:
-  Vector3 size {};
+  inline static constexpr int DEFAULT_RINGS = 16;
+  inline static constexpr int DEFAULT_SLICES = 16;
+
+  float   radius {};
 
 public:
-  Cube(const Vector3& pos, const Vector3& size, Color color = WHITE);
+  Sphere(const Vector3& pos, float radius, Color color = WHITE);
   
   const char* get_type() const override;
   void        draw() const override;
   
-  Vector3 get_size() const { return size; };
-  void    set_size(const Vector3 &newsize);
+  float   get_radius() const { return radius; };
+  void    set_radius(float newradius);
 
   float   calculate_distance(const Object& other) const override;
   bool    check_collision(const Object& other) const override;

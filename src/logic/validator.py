@@ -60,61 +60,58 @@ class Validator:
         self.__objects = objects
     
     def validate(self):
-        result = None
+        result = list()
         for i, rule in enumerate(self.__rules):
             vr = self.validate_rule(rule)
-            if vr.value != ValidationValue.OK:
-                return vr
-        return ValidationResult(ValidationValue.OK)
+            result += vr
+        return [vr.to_dict() for vr in result]
     
     def get_objects(self, type: str):
         match type:
-            case "cube":
+            case "any":
                 return self.__objects
+            case "cube":
+                return [ o for o in self.__objects if o.get_type() == "Cube" ]
+            case "sphere":
+                return [ o for o in self.__objects if o.get_type() == "Sphere" ]
         return list()
 
     def validate_rule(self, rule):
-        match rule.object:
-            case "cube":
-                objs = self.get_objects("cube")
-                worst_status = ValidationValue.OK
-                worst_attrs = {}
-                for i in range(len(objs)):
-                    for j in range(len(objs)):
-                        if i == j: continue
-                        cubea = objs[i]
-                        cubeb = objs[j]
-                        dist = cubea.calculate_distance(cubeb)
-                        # TODO: make rule.value str comparison
-                        assert(float(rule.value))
-                        if dist < rule.value:
-                            current_status = ValidationValue.INVALID
-                            current_attrs = {"type": rule.name, "cubea": cubea.id, "cubeb": cubeb.id}
-                        elif dist < rule.value * (1 + self.NUMBER_TOLERANCE):
-                            current_status = ValidationValue.VIOLATED
-                            current_attrs = {"type": rule.name, "cubea": cubea.id, "cubeb": cubeb.id}
-                        else:
-                            current_status = ValidationValue.OK
-                            current_attrs = {}
+        objs = self.get_objects(rule.object)
 
-                        if current_status == ValidationValue.INVALID:
-                            worst_status = current_status
-                            worst_attrs = current_attrs
-                            # Нет смысла проверять дальше, нашли максимальное нарушение
-                            return ValidationResult(worst_status, worst_attrs)
-                        elif current_status == ValidationValue.VIOLATED and worst_status != ValidationValue.INVALID:
-                            worst_status = current_status
-                            worst_attrs = current_attrs
+        # TODO: make rule.name match construction
+        assert(rule.name == "min_distance")
 
-                return ValidationResult(worst_status, worst_attrs)
+        # Validation Results
+        vrs = list()
+        for i in range(len(objs)):
+            for j in range(i, len(objs)):
+                if i == j: continue
+                obja = objs[i]
+                objb = objs[j]
+                dist = obja.calculate_distance(objb)
+                # TODO: make rule.value str comparison
+                assert(float(rule.value))
+                if dist < rule.value:
+                    current_status = ValidationValue.INVALID
+                elif dist < rule.value * (1 + self.NUMBER_TOLERANCE):
+                    current_status = ValidationValue.VIOLATED
+                else:
+                    current_status = ValidationValue.OK
+                    continue
+                current_attrs = {"type": rule.name, "obja": obja.id, "objb": objb.id}
+                vrs.append(
+                    ValidationResult(current_status, current_attrs)
+                )
+                print(f"Status {current_status} for entry \'{rule.name}\': excepted \'{rule.name} {rule.value:.2f}\', got {dist:.2f}. "
+                      f"Objects: ({obja.get_type()}{obja.id}, {objb.get_type()}{objb.id})")
+
+        return vrs
 
 
-        return ValidationResult(ValidationValue.OK)
-
-
-def validate(cubes):
-    v = Validator(cubes)
-    vr = v.validate()
-    return vr.to_dict()
-
+def validate(objs):
+    v = Validator(objs)
+    # list of dicts
+    vrs = v.validate()
+    return vrs
 

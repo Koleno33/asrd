@@ -1,9 +1,22 @@
+#include <algorithm>
+#include <cstdint>
+#include <cstdio>
 #include <raylib.h>
 #include <raymath.h>
 #include <vector>
 #include <memory>
 #include <graphics/cube.h>
+#include <graphics/sphere.h>
 #include <logic/objvalidator.h>
+
+Object* find_object_by_id(const std::vector<Object*>& objects, uint64_t target_id) {
+  auto it = std::find_if(objects.begin(), objects.end(),
+    [target_id](Object* obj) {
+        return obj->get_id() == target_id;
+    });
+  
+  return (it != objects.end()) ? *it : nullptr;
+}
 
 int main(void) 
 {
@@ -35,7 +48,7 @@ int main(void)
  
   SetTargetFPS(60);
 
-  std::vector<Cube*> cubes;
+  std::vector<Object*> objects;
 
   Cube* cube1 = new Cube(
     (Vector3){ 0.0f, 0.0f, 0.0f },
@@ -46,11 +59,26 @@ int main(void)
     (Vector3){ -3.0f, 0.0f, -3.0f },
     (Vector3){ 2.0f, 2.0f, 2.0f }
   );
-  
-  cubes.push_back(cube1);
-  cubes.push_back(cube2);
 
-  CubeValidator validator { };
+  Sphere* sphere1 = new Sphere(
+    (Vector3){ -9.0f, 0.0f, -3.0f },
+    1.0f
+  );
+
+  Sphere* sphere2 = new Sphere(
+    (Vector3){ -9.0f, 3.1f, -3.0f },
+    1.0f
+  );
+  
+  objects.push_back(cube1);
+  objects.push_back(cube2);
+  objects.push_back(sphere1);
+  objects.push_back(sphere2);
+
+  ObjValidator validator { };
+
+  // Временно единоразовая проверка
+  ColorMap valcolors = validator.validate(objects);
 
   while (!WindowShouldClose()) {
     Vector2 cur_mouse_pos = GetMousePosition();
@@ -111,20 +139,21 @@ int main(void)
     // Обновляем позицию мыши для следующего кадра
     prev_mouse_pos = cur_mouse_pos;
 
-    // Обработка выхода из программы
     if (IsKeyPressed(KEY_Q)) break;
-
-    Color valcolor = validator.validate_cubes(cubes);
 
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
     BeginMode3D(camera);
 
-    // Отрисовка кубов
-    for (const auto& cube : cubes) {
-      cube->set_color(valcolor);
-      cube->draw();
+    // Отрисовка объектов
+    Object* curobj;
+    for (const auto& [color, ids] : valcolors) {
+      for (uint64_t id : ids) {
+        curobj = find_object_by_id(objects, id);
+        curobj->set_color(color);
+        curobj->draw();
+      }
     }
 
     // Оси
@@ -133,31 +162,15 @@ int main(void)
     EndMode3D(); // Конец 3D-режима
                  
     // Отображаем статус валидации
-    const char* status;
-    int colnum = ColorToInt(valcolor);
-    if (colnum == ColorToInt(GREEN)) {
-      status = "OK";
-    }
-    else if (colnum == ColorToInt(ORANGE)) {
-      status = "VIOLATED";
-    }
-    else if (colnum == ColorToInt(RED)) {
-      status = "INVALID";
-    }
-    else {
-      status = "UNKNOWN";
-    }
 
     DrawText("AI Ship Room Designer", 10, 10, 20, DARKGRAY);
-    DrawText(TextFormat("Status: %s", status), 10, 40, 20, valcolor);
-    DrawText(TextFormat("Distance: %.2f", cube1->calculate_distance(*cube2)), 10, 70, 20, valcolor);
     DrawFPS(10, 100);
 
     EndDrawing(); // Конец рисования
   }
 
-  for (auto cube : cubes) {
-    delete cube;
+  for (auto obj : objects) {
+    delete obj;
   }
 
   CloseWindow();
