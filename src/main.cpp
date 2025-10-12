@@ -1,10 +1,5 @@
-#include <algorithm>
-#include <cstdint>
-#include <cstdio>
 #include <raylib.h>
 #include <raymath.h>
-#include <vector>
-#include <memory>
 #include <graphics/cube.h>
 #include <graphics/sphere.h>
 #include <logic/objvalidator.h>

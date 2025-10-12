@@ -1,6 +1,6 @@
 #include <logic/objvalidator.h>
-#include <iostream>
 #include <pybind11/pytypes.h>
+#include <iostream>
 
 Color ObjValidator::get_color_from_status(const std::string& status)
 {

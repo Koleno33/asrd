@@ -2,10 +2,7 @@
 #define OBJVALIDATOR_H
 
 #include <pybind11/embed.h>
-#include <graphics/cube.h>
-#include <map>
-#include <algorithm>
-#include <cstdint>
+#include <graphics/object.h>
 
 namespace py = pybind11;
 
