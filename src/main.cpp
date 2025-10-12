@@ -8,15 +8,7 @@
 #include <graphics/cube.h>
 #include <graphics/sphere.h>
 #include <logic/objvalidator.h>
-
-Object* find_object_by_id(const std::vector<Object*>& objects, uint64_t target_id) {
-  auto it = std::find_if(objects.begin(), objects.end(),
-    [target_id](Object* obj) {
-        return obj->get_id() == target_id;
-    });
-  
-  return (it != objects.end()) ? *it : nullptr;
-}
+#include <iostream>
 
 int main(void) 
 {
@@ -29,7 +21,7 @@ int main(void)
   camera.position = (Vector3){ 10.0f, 5.0f, 0.0f };   // Позиция камеры
   camera.target = (Vector3){ 0.0f, 5.0f, 10.0f };     // Куда смотрит камера
   camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Вверх (обычно вектор (0,1,0))
-  camera.fovy = 45.0f;                                // Поле зрения
+  camera.fovy = 60.0f;                                // Поле зрения
   camera.projection = CAMERA_PERSPECTIVE;             // Тип проекции
 
   // Начальные углы
@@ -60,6 +52,11 @@ int main(void)
     (Vector3){ 2.0f, 2.0f, 2.0f }
   );
 
+  Cube* cube3 = new Cube(
+    (Vector3){ 5.0f, 0.0f, 5.0f },
+    (Vector3){ 1.0f, 1.0f, 1.0f }
+  );
+
   Sphere* sphere1 = new Sphere(
     (Vector3){ -9.0f, 0.0f, -3.0f },
     1.0f
@@ -72,13 +69,26 @@ int main(void)
   
   objects.push_back(cube1);
   objects.push_back(cube2);
+  objects.push_back(cube3);
   objects.push_back(sphere1);
   objects.push_back(sphere2);
+
+  // Выводим все объекты и расстояния между ними в stdout
+  std::cout << "**********************************************\n";
+  for (int i = 0; i < objects.size(); ++i) {
+    for (int j = i + 1; j < objects.size(); ++j) {
+      Object* obja = objects[i];
+      Object* objb = objects[j];
+      std::cout << "Distance between " << obja->get_type() << obja->get_id() << " and " << objb->get_type() << objb->get_id()
+                << " is " << obja->calculate_distance(*objb) << '\n';
+    }
+  }
+  std::cout << "----------------------------------------------\n";
 
   ObjValidator validator { };
 
   // Временно единоразовая проверка
-  ColorMap valcolors = validator.validate(objects);
+  validator.validate(objects);
 
   while (!WindowShouldClose()) {
     Vector2 cur_mouse_pos = GetMousePosition();
@@ -147,24 +157,19 @@ int main(void)
     BeginMode3D(camera);
 
     // Отрисовка объектов
-    Object* curobj;
-    for (const auto& [color, ids] : valcolors) {
-      for (uint64_t id : ids) {
-        curobj = find_object_by_id(objects, id);
-        curobj->set_color(color);
-        curobj->draw();
-      }
+    for (Object* obj : objects) {
+      obj->draw();
     }
 
     // Оси
-    DrawGrid(10, 1.0f);
+    DrawGrid(20, 1.0f);
 
     EndMode3D(); // Конец 3D-режима
                  
     // Отображаем статус валидации
 
     DrawText("AI Ship Room Designer", 10, 10, 20, DARKGRAY);
-    DrawFPS(10, 100);
+    DrawFPS(10, 40);
 
     EndDrawing(); // Конец рисования
   }

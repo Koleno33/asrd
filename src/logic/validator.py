@@ -64,6 +64,12 @@ class Validator:
         for i, rule in enumerate(self.__rules):
             vr = self.validate_rule(rule)
             result += vr
+
+        # sorting ValidationResults from good to bad 
+        order = list(ValidationValue)
+        index_map = { v: i for i, v in enumerate(order) }
+        result.sort(key=lambda it: index_map[it.value])
+
         return [vr.to_dict() for vr in result]
     
     def get_objects(self, type: str):

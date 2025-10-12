@@ -12,24 +12,13 @@ Color ObjValidator::get_color_from_status(const std::string& status)
   return rescolor;
 }
 
-ColorMap ObjValidator::group_objects_by_color(const std::vector<py::dict>& vresults)
-{
-  std::map<uint64_t, std::string> object_status;
-  ColorMap color_groups;
-
-  for (const auto& vresult : vresults) {
-    std::string value = vresult["value"].cast<std::string>();
-    py::dict attrs = vresult["attrs"];
-
-    uint64_t obja = attrs["obja"].cast<uint64_t>();
-    uint64_t objb = attrs["objb"].cast<uint64_t>();
-
-    Color color = get_color_from_status(value);
-    color_groups[color].push_back(obja);
-    color_groups[color].push_back(objb);
-  }
+Object* find_object_by_id(const std::vector<Object*>& objects, uint64_t target_id) {
+  auto it = std::find_if(objects.begin(), objects.end(),
+    [target_id](Object* obj) {
+        return obj->get_id() == target_id;
+    });
   
-  return color_groups;
+  return (it != objects.end()) ? *it : nullptr;
 }
 
 ObjValidator::ObjValidator() 
@@ -45,10 +34,8 @@ ObjValidator::ObjValidator()
   }
 }
 
-ColorMap ObjValidator::validate(const std::vector<Object*>& objs)
+void ObjValidator::validate(const std::vector<Object*>& objs)
 {
-  ColorMap result;
-
   try {
     py::module_ validator_module = py::module_::import("validator");
 
@@ -59,12 +46,16 @@ ColorMap ObjValidator::validate(const std::vector<Object*>& objs)
 
     py::list valresults = validator_module.attr("validate")(obj_list);
 
-    std::vector<py::dict> vresults_vec {};
+    Object* curobj;
     for (auto vresult : valresults) {
-      vresults_vec.push_back(vresult.cast<py::dict>());
-    }
+      std::string value = vresult["value"].cast<std::string>();
+      py::dict attrs = vresult["attrs"];
 
-    result = group_objects_by_color(vresults_vec);
+      curobj = find_object_by_id(objs, attrs["obja"].cast<uint64_t>());
+      curobj->set_color(get_color_from_status(value));
+      curobj = find_object_by_id(objs, attrs["objb"].cast<uint64_t>());
+      curobj->set_color(get_color_from_status(value));
+    }
   }
   catch (const py::error_already_set& e) {
     std::cerr << "Python validation error: " << e.what() << '\n';
@@ -72,7 +63,5 @@ ColorMap ObjValidator::validate(const std::vector<Object*>& objs)
   catch (const std::exception& e) {
     std::cerr << "Validation error: " << e.what() << '\n';
   }
-
-  return result;
 }
 
