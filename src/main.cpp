@@ -76,16 +76,16 @@ int main(void)
   );
 
   // Выводим все объекты и расстояния между ними в stdout
-  std::cout << "**********************************************\n";
+  std::cout << "*******************************************************\n";
   for (int i = 0; i < objects.size(); ++i) {
     for (int j = i + 1; j < objects.size(); ++j) {
       Object* obja = objects[i];
       Object* objb = objects[j];
       std::cout << "Distance between " << obja->get_type() << obja->get_id() << " and " << objb->get_type() << objb->get_id()
-                << " is " << obja->calculate_distance(*objb) << '\n';
+                << "\t is \t" << obja->calculate_distance(*objb) << '\n';
     }
   }
-  std::cout << "----------------------------------------------\n";
+  std::cout << "-------------------------------------------------------\n";
 
   ObjValidator validator { };
 
