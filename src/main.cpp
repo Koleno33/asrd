@@ -2,6 +2,7 @@
 #include <raymath.h>
 #include <graphics/cube.h>
 #include <graphics/sphere.h>
+#include <graphics/room.h>
 #include <logic/objvalidator.h>
 #include <iostream>
 
@@ -68,6 +69,12 @@ int main(void)
   objects.push_back(sphere1);
   objects.push_back(sphere2);
 
+  Room *room = new Room(
+    (Vector3){ 0.0f, 0.0f, 0.0f },       // origin
+    (Vector3){ 20.0f, 10.0f, 20.0f },    // dimensions
+    BLUE                                 // wireframe color
+  );
+
   // Выводим все объекты и расстояния между ними в stdout
   std::cout << "**********************************************\n";
   for (int i = 0; i < objects.size(); ++i) {
@@ -95,7 +102,7 @@ int main(void)
     camera_yaw += mouse_delta.x;
     camera_pitch -= mouse_delta.y;
 
-    // Чтобы камера на перевернулась
+    // Чтобы камера не перевернулась
     if (camera_pitch > 89.0f * DEG2RAD) camera_pitch = 89.0f * DEG2RAD;
     if (camera_pitch < -89.0f * DEG2RAD) camera_pitch = -89.0f * DEG2RAD;
 
@@ -156,6 +163,9 @@ int main(void)
       obj->draw();
     }
 
+    // Отрисовка помещения
+    room->draw(camera.position);
+
     // Оси
     DrawGrid(20, 1.0f);
 
@@ -172,6 +182,7 @@ int main(void)
   for (auto obj : objects) {
     delete obj;
   }
+  delete room;
 
   CloseWindow();
   return 0;
