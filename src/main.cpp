@@ -39,27 +39,27 @@ int main(void)
   std::vector<Object*> objects;
 
   Cube* cube1 = new Cube(
-    (Vector3){ 0.0f, 0.0f, 0.0f },
+    (Vector3){ 0.0f, 1.0f, 0.0f },
     (Vector3){ 2.0f, 2.0f, 2.0f }
   );
 
   Cube* cube2 = new Cube(
-    (Vector3){ -3.0f, 0.0f, -3.0f },
+    (Vector3){ -3.0f, 1.0f, -3.0f },
     (Vector3){ 2.0f, 2.0f, 2.0f }
   );
 
   Cube* cube3 = new Cube(
-    (Vector3){ 5.0f, 0.0f, 5.0f },
+    (Vector3){ 5.0f, 0.5f, 5.0f },
     (Vector3){ 1.0f, 1.0f, 1.0f }
   );
 
   Sphere* sphere1 = new Sphere(
-    (Vector3){ -9.0f, 0.0f, -3.0f },
+    (Vector3){ -9.0f, 1.0f, -3.0f },
     1.0f
   );
 
   Sphere* sphere2 = new Sphere(
-    (Vector3){ -9.0f, 3.1f, -3.0f },
+    (Vector3){ -9.0f, 4.1f, -3.0f },
     1.0f
   );
   

@@ -17,63 +17,72 @@ Room::~Room()
 
 void Room::init_walls() 
 {
-  float x = origin.x, y = origin.y, z = origin.z;
-  float w = dimensions.x, h = dimensions.y, d = dimensions.z;
+  float half_width = dimensions.x / 2.0f;
+  float height = dimensions.y;
+  float half_depth = dimensions.z / 2.0f;
+
+  // Углы комнаты относительно центра пола
+  float left = origin.x - half_width;
+  float right = origin.x + half_width;
+  float bottom = origin.y;
+  float top = origin.y + height;
+  float front = origin.z - half_depth;
+  float back = origin.z + half_depth;
 
   // Пол и потолок
   walls[0] = new Wall(SurfaceType::FLOOR, 
-                     Vector3{0.0f, 1.0f, 0.0f}, y,
+                     Vector3{0.0f, 1.0f, 0.0f}, bottom,
                      std::array<Vector3, 4>{
-                         Vector3{x, y, z},
-                         Vector3{x + w, y, z},
-                         Vector3{x + w, y, z + d},
-                         Vector3{x, y, z + d}
+                         Vector3{left, bottom, front},
+                         Vector3{right, bottom, front},
+                         Vector3{right, bottom, back},
+                         Vector3{left, bottom, back}
                      });
 
   walls[1] = new Wall(SurfaceType::CEILING,
-                     Vector3{0.0f, -1.0f, 0.0f}, -(y + h),
+                     Vector3{0.0f, -1.0f, 0.0f}, -top,
                      std::array<Vector3, 4>{
-                         Vector3{x, y + h, z},
-                         Vector3{x + w, y + h, z},
-                         Vector3{x + w, y + h, z + d},
-                         Vector3{x, y + h, z + d}
+                         Vector3{left, top, front},
+                         Vector3{right, top, front},
+                         Vector3{right, top, back},
+                         Vector3{left, top, back}
                      });
 
   // Стены
   walls[2] = new Wall(SurfaceType::WALL_FRONT,
-                     Vector3{0.0f, 0.0f, 1.0f}, z,
+                     Vector3{0.0f, 0.0f, 1.0f}, front,
                      std::array<Vector3, 4>{
-                         Vector3{x, y, z},
-                         Vector3{x, y + h, z},
-                         Vector3{x + w, y + h, z},
-                         Vector3{x + w, y, z}
+                         Vector3{left, bottom, front},
+                         Vector3{left, top, front},
+                         Vector3{right, top, front},
+                         Vector3{right, bottom, front}
                      });
 
   walls[3] = new Wall(SurfaceType::WALL_BACK,
-                     Vector3{0.0f, 0.0f, -1.0f}, -(z + d),
+                     Vector3{0.0f, 0.0f, -1.0f}, -back,
                      std::array<Vector3, 4>{
-                         Vector3{x, y, z + d},
-                         Vector3{x + w, y, z + d},
-                         Vector3{x + w, y + h, z + d},
-                         Vector3{x, y + h, z + d}
+                         Vector3{left, bottom, back},
+                         Vector3{right, bottom, back},
+                         Vector3{right, top, back},
+                         Vector3{left, top, back}
                      });
 
   walls[4] = new Wall(SurfaceType::WALL_LEFT,
-                     Vector3{1.0f, 0.0f, 0.0f}, x,
+                     Vector3{1.0f, 0.0f, 0.0f}, left,
                      std::array<Vector3, 4>{
-                         Vector3{x, y, z},
-                         Vector3{x, y, z + d},
-                         Vector3{x, y + h, z + d},
-                         Vector3{x, y + h, z}
+                         Vector3{left, bottom, front},
+                         Vector3{left, bottom, back},
+                         Vector3{left, top, back},
+                         Vector3{left, top, front}
                      });
 
   walls[5] = new Wall(SurfaceType::WALL_RIGHT,
-                     Vector3{-1.0f, 0.0f, 0.0f}, -(x + w),
+                     Vector3{-1.0f, 0.0f, 0.0f}, -right,
                      std::array<Vector3, 4>{
-                         Vector3{x + w, y, z},
-                         Vector3{x + w, y + h, z},
-                         Vector3{x + w, y + h, z + d},
-                         Vector3{x + w, y, z + d}
+                         Vector3{right, bottom, front},
+                         Vector3{right, top, front},
+                         Vector3{right, top, back},
+                         Vector3{right, bottom, back}
                      });
 }
 
@@ -90,7 +99,8 @@ void Room::draw(const Vector3& camera_position) const
       DrawLine3D(vertices[1], vertices[2], wireframe_color);
       DrawLine3D(vertices[2], vertices[3], wireframe_color);
       DrawLine3D(vertices[3], vertices[0], wireframe_color);
-    } else {
+    } 
+    else {
       // Рисуем прозрачные стены
       Color transparent_color = wireframe_color;
       transparent_color.a = 80;
@@ -110,10 +120,11 @@ void Room::draw(const Vector3& camera_position) const
 
 Vector3 Room::get_center() const 
 {
+  // Центр находится над центром пола на половине высоты
   return Vector3{
-    origin.x + dimensions.x / 2,
+    origin.x,
     origin.y + dimensions.y / 2,
-    origin.z + dimensions.z / 2
+    origin.z
   };
 }
 
@@ -153,7 +164,11 @@ float Room::get_near_distance(const Vector3& point) const
 
 bool Room::is_inside(const Vector3& point) const 
 {
-    return point.x >= origin.x && point.x <= origin.x + dimensions.x &&
-           point.y >= origin.y && point.y <= origin.y + dimensions.y &&
-           point.z >= origin.z && point.z <= origin.z + dimensions.z;
+  float half_width = dimensions.x / 2.0f;
+  float half_depth = dimensions.z / 2.0f;
+
+  return point.x >= origin.x - half_width && point.x <= origin.x + half_width &&
+         point.y >= origin.y && point.y <= origin.y + dimensions.y &&
+         point.z >= origin.z - half_depth && point.z <= origin.z + half_depth;
 }
+
