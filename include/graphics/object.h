@@ -16,6 +16,7 @@
 
 class Cube;
 class Sphere;
+class Wall;
 
 class OBJECT_API Object 
 {
@@ -52,6 +53,7 @@ public:
 
   // Виртуальные методы для коллизий
   virtual float calculate_distance(const Object& other) const = 0;
+  virtual float calculate_distance_to_wall(const Wall& wall) const = 0;
   virtual bool check_collision(const Object& other) const = 0;
 
   // Перегруженные методы для конкретных типов

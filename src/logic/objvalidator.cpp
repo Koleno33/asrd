@@ -1,4 +1,6 @@
+#include <cstdint>
 #include <logic/objvalidator.h>
+#include <memory>
 #include <pybind11/pytypes.h>
 #include <iostream>
 
@@ -12,9 +14,9 @@ Color ObjValidator::get_color_from_status(const std::string& status)
   return rescolor;
 }
 
-Object* find_object_by_id(const std::vector<Object*>& objects, uint64_t target_id) {
+std::shared_ptr<Object> ObjValidator::find_object_by_id(const std::vector<std::shared_ptr<Object>>& objects, uint64_t target_id) {
   auto it = std::find_if(objects.begin(), objects.end(),
-    [target_id](Object* obj) {
+    [target_id](const std::shared_ptr<Object>& obj) {
         return obj->get_id() == target_id;
     });
   
@@ -34,28 +36,53 @@ ObjValidator::ObjValidator()
   }
 }
 
-void ObjValidator::validate(const std::vector<Object*>& objs)
+void ObjValidator::validate(const std::vector<std::shared_ptr<Object>>& objs, std::shared_ptr<Room> room)
 {
   try {
     py::module_ validator_module = py::module_::import("validator");
 
     py::list obj_list;
-    for (Object* obj : objs) {
+    for (std::shared_ptr<Object> obj : objs) {
+      // py::object py_obj = py::cast(obj, py::return_value_policy::reference);
       obj_list.append(py::cast(obj));
     }
 
-    py::list valresults = validator_module.attr("validate")(obj_list);
+    py::list valresults = validator_module.attr("validate")(obj_list, room);
 
-    Object* curobj;
+    std::cout << "=== VALIDATION RESULTS ===" << std::endl;
+    std::cout << "Number of results: " << len(valresults) << std::endl;
+
+    std::shared_ptr<Object> curobj;
     for (auto vresult : valresults) {
+      std::string rule = vresult["attrs"]["type"].cast<std::string>();
       std::string value = vresult["value"].cast<std::string>();
-      py::dict attrs = vresult["attrs"];
 
-      curobj = find_object_by_id(objs, attrs["obja"].cast<uint64_t>());
-      curobj->set_color(get_color_from_status(value));
-      curobj = find_object_by_id(objs, attrs["objb"].cast<uint64_t>());
-      curobj->set_color(get_color_from_status(value));
+      std::cout << "Rule: " << rule << ", Status: " << value << std::endl;
+
+      if (rule == "min_distance") {
+        py::dict attrs = vresult["attrs"];
+        uint64_t obja_id = attrs["obja"].cast<uint64_t>();
+        uint64_t objb_id = attrs["objb"].cast<uint64_t>();
+
+        std::cout << "  Objects: " << obja_id << " and " << objb_id << std::endl;
+
+        curobj = find_object_by_id(objs, obja_id);
+        curobj->set_color(get_color_from_status(value));
+        curobj = find_object_by_id(objs, objb_id);
+        curobj->set_color(get_color_from_status(value));
+      }
+      else if (rule == "distance") {
+        py::dict attrs = vresult["attrs"];
+        uint64_t obj_id = attrs["obja"].cast<uint64_t>();
+
+        curobj = find_object_by_id(objs, obj_id);
+        curobj->set_color(get_color_from_status(value));
+      }
+      else {
+        std::cout << "  Object not found" << std::endl;
+      }
     }
+    std::cout << "=== END VALIDATION RESULTS ===" << std::endl;
   }
   catch (const py::error_already_set& e) {
     std::cerr << "Python validation error: " << e.what() << '\n';

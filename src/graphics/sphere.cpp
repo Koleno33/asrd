@@ -1,5 +1,6 @@
 #include <graphics/sphere.h>
 #include <graphics/cube.h>
+#include <graphics/wall.h>
 #include <cmath>
 #include <raymath.h>
 
@@ -24,6 +25,17 @@ void Sphere::draw() const
 void Sphere::set_radius(float newradius) 
 {
   radius = newradius;
+}
+
+float Sphere::calculate_distance_to_wall(const Wall& wall) const 
+{
+  // Вычисляем расстояние от центра сферы до стены
+  float center_distance = wall.calc_distance_to_point(position);
+  
+  // Вычитаем радиус, чтобы получить расстояние до поверхности сферы
+  float surface_distance = center_distance - radius;
+  
+  return surface_distance;
 }
 
 float Sphere::calculate_distance(const Object& other) const

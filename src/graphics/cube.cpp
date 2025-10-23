@@ -1,5 +1,6 @@
 #include <graphics/cube.h>
 #include <graphics/sphere.h>
+#include <graphics/wall.h>
 #include <cmath>
 #include <raymath.h>
 
@@ -24,6 +25,19 @@ void Cube::draw() const
 void Cube::set_size(const Vector3& newsize) 
 {
   size = newsize;
+}
+
+float Cube::calculate_distance_to_wall(const Wall& wall) const
+{
+  // Используем метод проекции для расстояния
+  Vector3 wall_normal = wall.get_normal();
+  float half_size_projection = 
+      (fabsf(wall_normal.x) * size.x / 2.0f) +
+      (fabsf(wall_normal.y) * size.y / 2.0f) + 
+      (fabsf(wall_normal.z) * size.z / 2.0f);
+  
+  float center_distance = wall.calc_distance_to_point(position);
+  return center_distance - half_size_projection;
 }
 
 float Cube::calculate_distance(const Object& other) const

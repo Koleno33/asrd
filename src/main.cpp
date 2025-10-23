@@ -1,3 +1,4 @@
+#include <memory>
 #include <raylib.h>
 #include <raymath.h>
 #include <graphics/cube.h>
@@ -36,29 +37,29 @@ int main(void)
  
   SetTargetFPS(60);
 
-  std::vector<Object*> objects;
+  std::vector<std::shared_ptr<Object>> objects;
 
-  Cube* cube1 = new Cube(
+  auto cube1 = std::make_shared<Cube> (
     (Vector3){ 0.0f, 1.0f, 0.0f },
     (Vector3){ 2.0f, 2.0f, 2.0f }
   );
 
-  Cube* cube2 = new Cube(
+  auto cube2 = std::make_shared<Cube> (
     (Vector3){ -3.0f, 1.0f, -3.0f },
     (Vector3){ 2.0f, 2.0f, 2.0f }
   );
 
-  Cube* cube3 = new Cube(
+  auto cube3 = std::make_shared<Cube> (
     (Vector3){ 5.0f, 0.5f, 5.0f },
     (Vector3){ 1.0f, 1.0f, 1.0f }
   );
 
-  Sphere* sphere1 = new Sphere(
+  auto sphere1 = std::make_shared<Sphere>(
     (Vector3){ -9.0f, 1.0f, -3.0f },
     1.0f
   );
 
-  Sphere* sphere2 = new Sphere(
+  auto sphere2 = std::make_shared<Sphere>(
     (Vector3){ -9.0f, 4.1f, -3.0f },
     1.0f
   );
@@ -69,7 +70,7 @@ int main(void)
   objects.push_back(sphere1);
   objects.push_back(sphere2);
 
-  Room *room = new Room(
+  auto room = std::make_shared<Room>(
     (Vector3){ 0.0f, 0.0f, 0.0f },       // origin
     (Vector3){ 20.0f, 10.0f, 20.0f },    // dimensions
     BLUE                                 // wireframe color
@@ -79,8 +80,8 @@ int main(void)
   std::cout << "*******************************************************\n";
   for (int i = 0; i < objects.size(); ++i) {
     for (int j = i + 1; j < objects.size(); ++j) {
-      Object* obja = objects[i];
-      Object* objb = objects[j];
+      std::shared_ptr<Object> obja = objects[i];
+      std::shared_ptr<Object> objb = objects[j];
       std::cout << "Distance between " << obja->get_type() << obja->get_id() << " and " << objb->get_type() << objb->get_id()
                 << "\t is \t" << obja->calculate_distance(*objb) << '\n';
     }
@@ -90,7 +91,7 @@ int main(void)
   ObjValidator validator { };
 
   // Временно единоразовая проверка
-  validator.validate(objects);
+  validator.validate(objects, room);
 
   while (!WindowShouldClose()) {
     Vector2 cur_mouse_pos = GetMousePosition();
@@ -159,7 +160,7 @@ int main(void)
     BeginMode3D(camera);
 
     // Отрисовка объектов
-    for (Object* obj : objects) {
+    for (std::shared_ptr<Object> obj : objects) {
       obj->draw();
     }
 
@@ -178,11 +179,6 @@ int main(void)
 
     EndDrawing(); // Конец рисования
   }
-
-  for (auto obj : objects) {
-    delete obj;
-  }
-  delete room;
 
   CloseWindow();
   return 0;

@@ -47,9 +47,11 @@ pybind11_add_module(objects_module
   ${SRC_DIR}/graphics/cube.cpp
   ${SRC_DIR}/graphics/sphere.cpp
   ${SRC_DIR}/graphics/object.cpp
+  ${SRC_DIR}/graphics/wall.cpp
+  ${SRC_DIR}/graphics/room.cpp
 )
 target_include_directories(objects_module PRIVATE ${INCLUDE_DIR})
-target_link_libraries(objects_module PRIVATE pybind11::module)
+target_link_libraries(objects_module PRIVATE pybind11::module raylib)
 
 # add_custom_target(copy_assets ALL
 #     COMMAND ${CMAKE_COMMAND} -E copy_directory

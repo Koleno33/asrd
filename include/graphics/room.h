@@ -4,27 +4,30 @@
 #include <raylib.h>
 #include <array>
 #include <vector>
+#include <memory>
 #include <graphics/wall.h>
+#include <graphics/object.h>
 
-class Room 
+class OBJECT_API Room 
 {
 private:
   Vector3 origin;
   Vector3 dimensions;
-  std::array<Wall*, 6> walls;
+  std::array<std::unique_ptr<Wall>, 6> walls;
   Color wireframe_color;
 public:
   Room(const Vector3& origin, const Vector3& dimensions,
        const Color& wireframe_color = RED);
-  ~Room();
+  ~Room() = default;
 
   Vector3                get_center() const;
-  std::vector<Vector3*>  get_wf_vertices() const;                       // Массив всех вершин помещения для каркаса
+  std::vector<Vector3>   get_wf_vertices() const;                       // Массив всех вершин помещения для каркаса
   Vector3                get_origin() const;
   Vector3                get_dimensions() const;
   Color                  get_wf_color() const;
-  std::array<Wall*, 6>   get_walls() const;
-  const Wall*            get_wall(SurfaceType type) const;
+
+  std::array<std::shared_ptr<const Wall>, 6>   get_walls() const;
+  std::shared_ptr<const Wall>                  get_wall(SurfaceType type) const;
 
   void                   init_walls();
   float                  get_near_distance(const Vector3& point) const; // Расстояние от точки до ближайшей стены

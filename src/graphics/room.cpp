@@ -1,18 +1,12 @@
 #include <graphics/room.h>
 #include <algorithm>
 #include <limits>
+#include <memory>
 
 Room::Room(const Vector3& origin, const Vector3& dimensions, const Color& wireframe_color)
     : origin(origin), dimensions(dimensions), wireframe_color(wireframe_color) 
 {
   init_walls();
-}
-
-Room::~Room() 
-{
-  for (auto wall : walls) {
-    delete wall;
-  }
 }
 
 void Room::init_walls() 
@@ -30,7 +24,7 @@ void Room::init_walls()
   float back = origin.z + half_depth;
 
   // Пол и потолок
-  walls[0] = new Wall(SurfaceType::FLOOR, 
+  walls[0] = std::make_unique<Wall>(SurfaceType::FLOOR, 
                      Vector3{0.0f, 1.0f, 0.0f}, bottom,
                      std::array<Vector3, 4>{
                          Vector3{left, bottom, front},
@@ -39,7 +33,7 @@ void Room::init_walls()
                          Vector3{left, bottom, back}
                      });
 
-  walls[1] = new Wall(SurfaceType::CEILING,
+  walls[1] = std::make_unique<Wall>(SurfaceType::CEILING,
                      Vector3{0.0f, -1.0f, 0.0f}, -top,
                      std::array<Vector3, 4>{
                          Vector3{left, top, front},
@@ -49,7 +43,7 @@ void Room::init_walls()
                      });
 
   // Стены
-  walls[2] = new Wall(SurfaceType::WALL_FRONT,
+  walls[2] = std::make_unique<Wall>(SurfaceType::WALL_FRONT,
                      Vector3{0.0f, 0.0f, 1.0f}, front,
                      std::array<Vector3, 4>{
                          Vector3{left, bottom, front},
@@ -58,7 +52,7 @@ void Room::init_walls()
                          Vector3{right, bottom, front}
                      });
 
-  walls[3] = new Wall(SurfaceType::WALL_BACK,
+  walls[3] = std::make_unique<Wall>(SurfaceType::WALL_BACK,
                      Vector3{0.0f, 0.0f, -1.0f}, -back,
                      std::array<Vector3, 4>{
                          Vector3{left, bottom, back},
@@ -67,7 +61,7 @@ void Room::init_walls()
                          Vector3{left, top, back}
                      });
 
-  walls[4] = new Wall(SurfaceType::WALL_LEFT,
+  walls[4] = std::make_unique<Wall>(SurfaceType::WALL_LEFT,
                      Vector3{1.0f, 0.0f, 0.0f}, left,
                      std::array<Vector3, 4>{
                          Vector3{left, bottom, front},
@@ -76,7 +70,7 @@ void Room::init_walls()
                          Vector3{left, top, front}
                      });
 
-  walls[5] = new Wall(SurfaceType::WALL_RIGHT,
+  walls[5] = std::make_unique<Wall>(SurfaceType::WALL_RIGHT,
                      Vector3{-1.0f, 0.0f, 0.0f}, -right,
                      std::array<Vector3, 4>{
                          Vector3{right, bottom, front},
@@ -90,7 +84,7 @@ void Room::draw(const Vector3& camera_position) const
 {
   bool camera_inside = is_inside(camera_position);
   
-  for (auto wall : walls) {
+  for (const auto& wall : walls) {
     auto vertices = wall->get_vertices();
     
     if (camera_inside) {
@@ -128,13 +122,13 @@ Vector3 Room::get_center() const
   };
 }
 
-std::vector<Vector3*> Room::get_wf_vertices() const 
+std::vector<Vector3> Room::get_wf_vertices() const 
 {
-  std::vector<Vector3*> vertices;
+  std::vector<Vector3> vertices;
   for (const auto& wall : walls) {
     auto wallverts = wall->get_vertices();
     for (const auto& vert : wallverts) {
-      vertices.push_back(new Vector3(vert));
+      vertices.push_back(vert);
     }
   }
   return vertices;
@@ -143,13 +137,27 @@ std::vector<Vector3*> Room::get_wf_vertices() const
 Vector3 Room::get_origin() const { return origin; }
 Vector3 Room::get_dimensions() const { return dimensions; }
 Color Room::get_wf_color() const { return wireframe_color; }
-std::array<Wall*, 6> Room::get_walls() const { return walls; }
 
-const Wall* Room::get_wall(SurfaceType type) const 
+std::array<std::shared_ptr<const Wall>, 6> Room::get_walls() const 
 {
-  auto it = std::find_if(walls.begin(), walls.end(), 
-                        [type](Wall* wall) { return wall->get_type() == type; });
-  return it != walls.end() ? *it : nullptr;
+  return {
+    std::shared_ptr<const Wall>(walls[0].get(), [](const Wall*){}),
+    std::shared_ptr<const Wall>(walls[1].get(), [](const Wall*){}),
+    std::shared_ptr<const Wall>(walls[2].get(), [](const Wall*){}),
+    std::shared_ptr<const Wall>(walls[3].get(), [](const Wall*){}),
+    std::shared_ptr<const Wall>(walls[4].get(), [](const Wall*){}),
+    std::shared_ptr<const Wall>(walls[5].get(), [](const Wall*){})
+  };
+}
+
+std::shared_ptr<const Wall> Room::get_wall(SurfaceType type) const 
+{
+  for (const auto& wall : walls) {
+    if (wall->get_type() == type) {
+        return std::shared_ptr<const Wall>(wall.get(), [](const Wall*){});
+    }
+  }
+  return nullptr;
 }
 
 float Room::get_near_distance(const Vector3& point) const 

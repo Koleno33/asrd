@@ -3,8 +3,9 @@
 
 #include <raylib.h>
 #include <array>
+#include <graphics/object.h>
 
-enum class SurfaceType
+enum class OBJECT_API SurfaceType
 {
   FLOOR,
   CEILING,
@@ -14,7 +15,7 @@ enum class SurfaceType
   WALL_RIGHT
 };
 
-class Wall 
+class OBJECT_API Wall 
 {
 private:
   SurfaceType             type;

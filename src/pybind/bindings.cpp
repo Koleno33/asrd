@@ -1,5 +1,7 @@
 #include <graphics/cube.h>
 #include <graphics/sphere.h>
+#include <graphics/room.h>
+#include <graphics/wall.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
@@ -52,6 +54,7 @@ PYBIND11_MODULE(objects_module, handle)
     .def_property("position", &Object::get_position, &Object::set_position)
     .def("get_type", &Object::get_type)
     .def("calculate_distance", &Object::calculate_distance)
+    .def("calculate_distance_to_wall", &Object::calculate_distance_to_wall)
     .def("check_collision", &Object::check_collision);
 
   // Cube class
@@ -66,6 +69,7 @@ PYBIND11_MODULE(objects_module, handle)
     // Methods
     .def("calculate_distance", &Cube::calculate_distance)
     .def("check_collision", &Cube::check_collision)
+    .def("calculate_distance_to_wall", &Cube::calculate_distance_to_wall)
     
     // String representation
     .def("__repr__", [](const Cube& c) {
@@ -91,6 +95,7 @@ PYBIND11_MODULE(objects_module, handle)
     // Specific methods
     .def("calculate_distance", &Sphere::calculate_distance)
     .def("check_collision", &Sphere::check_collision)
+    .def("calculate_distance_to_wall", &Sphere::calculate_distance_to_wall)
     
     // String representation
     .def("__repr__", [](const Sphere& s) {
@@ -100,6 +105,62 @@ PYBIND11_MODULE(objects_module, handle)
                               std::to_string(pos.z) + 
                      "), radius=" + std::to_string(s.get_radius()) + ")";
   });
+
+  // SurfaceType enum
+  py::enum_<SurfaceType>(handle, "SurfaceType")
+      .value("FLOOR", SurfaceType::FLOOR)
+      .value("CEILING", SurfaceType::CEILING)
+      .value("WALL_FRONT", SurfaceType::WALL_FRONT)
+      .value("WALL_BACK", SurfaceType::WALL_BACK)
+      .value("WALL_LEFT", SurfaceType::WALL_LEFT)
+      .value("WALL_RIGHT", SurfaceType::WALL_RIGHT)
+      .export_values();
+
+  // Wall class
+  py::class_<Wall, std::shared_ptr<Wall>>(handle, "Wall")
+      .def(py::init<SurfaceType, const Vector3&, float, const std::array<Vector3, 4>&>(),
+           py::arg("type"), py::arg("normal"), py::arg("distance"), py::arg("vertices"))
+      .def("get_type", &Wall::get_type)
+      .def("get_normal", &Wall::get_normal)
+      .def("get_vertices", &Wall::get_vertices)
+      .def("get_center", &Wall::get_center)
+      .def("calc_distance_to_point", &Wall::calc_distance_to_point)
+      .def("__repr__", [](const Wall& w) {
+          auto type = w.get_type();
+          auto normal = w.get_normal();
+          auto center = w.get_center();
+          return "Wall(type=" + std::to_string(static_cast<int>(type)) + 
+                 ", normal=(" + std::to_string(normal.x) + ", " + 
+                              std::to_string(normal.y) + ", " + 
+                              std::to_string(normal.z) + 
+                 "), center=(" + std::to_string(center.x) + ", " + 
+                               std::to_string(center.y) + ", " + 
+                               std::to_string(center.z) + "))";
+      });
+
+  // Room class
+  py::class_<Room, std::shared_ptr<Room>>(handle, "Room")
+      .def(py::init<const Vector3&, const Vector3&, const Color&>(),
+           py::arg("origin"), py::arg("dimensions"), py::arg("wireframe_color") = RED)
+      .def("get_center", &Room::get_center)
+      .def("get_wf_vertices", &Room::get_wf_vertices)
+      .def("get_origin", &Room::get_origin)
+      .def("get_dimensions", &Room::get_dimensions)
+      .def("get_wf_color", &Room::get_wf_color)
+      .def("get_walls", &Room::get_walls) // shared_ptr
+      .def("get_wall", &Room::get_wall)   // shared_ptr
+      .def("get_near_distance", &Room::get_near_distance)
+      .def("is_inside", &Room::is_inside)
+      .def("__repr__", [](const Room& r) {
+          auto origin = r.get_origin();
+          auto dims = r.get_dimensions();
+          return "Room(origin=(" + std::to_string(origin.x) + ", " + 
+                                 std::to_string(origin.y) + ", " + 
+                                 std::to_string(origin.z) + 
+                    "), dimensions=(" + std::to_string(dims.x) + ", " + 
+                                      std::to_string(dims.y) + ", " + 
+                                      std::to_string(dims.z) + "))";
+      });
 
   // Vectors representations
   py::bind_vector<std::vector<std::shared_ptr<Object>>>(handle, "VectorObjectPtr");
