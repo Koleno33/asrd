@@ -11,8 +11,8 @@
 class OBJECT_API Room 
 {
 private:
-  Vector3 origin;
-  Vector3 dimensions;
+  Vector3 origin;                                                       // По умолчанию в центре пола
+  Vector3 dimensions;                                                   // Расстояния между противоположными стенами
   std::array<std::unique_ptr<Wall>, 6> walls;
   Color wireframe_color;
 public:
@@ -31,7 +31,8 @@ public:
 
   void                   init_walls();
   float                  get_near_distance(const Vector3& point) const; // Расстояние от точки до ближайшей стены
-  bool                   is_inside(const Vector3& point) const; 
+  bool                   is_point_inside(const Vector3& point) const; 
+  bool                   is_obj_inside(const Object& obj) const; 
   void                   draw(const Vector3& camera_pos) const;
 };
 

@@ -3,11 +3,12 @@
 #include <memory>
 #include <pybind11/pytypes.h>
 #include <iostream>
+#include <sys/types.h>
 
 Color ObjValidator::get_color_from_status(const std::string& status)
 {
   Color rescolor;
-  if (status == "ok") rescolor = GRAY;
+  if (status == "ok") rescolor = WHITE;
   else if (status == "violated") rescolor = ORANGE;
   else if (status == "invalid") rescolor = RED;
   else rescolor = GRAY;
@@ -92,3 +93,35 @@ void ObjValidator::validate(const std::vector<std::shared_ptr<Object>>& objs, st
   }
 }
 
+void ObjValidator::arrange_objs(std::vector<std::shared_ptr<Object>>& objs, std::shared_ptr<Room> room)
+{
+  try {
+    py::module_ validator_module = py::module_::import("validator");
+
+    py::list obj_list;
+    for (std::shared_ptr<Object> obj : objs) {
+      obj_list.append(py::cast(obj));
+    }
+
+    py::dict new_positions = validator_module.attr("arrange_objects")(obj_list, room);
+
+    std::shared_ptr<Object> curobj;
+    for (auto item : new_positions) {
+      Vector3 new_pos = new_positions[item.first].cast<Vector3>();
+
+      uint64_t obj_id = item.first.cast<uint64_t>();
+      curobj = find_object_by_id(objs, obj_id);
+
+      curobj->set_position(new_pos);
+      curobj->set_color(WHITE);
+    }
+
+    std::cout << "Objects arranged successfully with rule compliance!" << std::endl;
+  }
+  catch (const py::error_already_set& e) {
+    std::cerr << "Python arrangement error: " << e.what() << '\n';
+  }
+  catch (const std::exception& e) {
+    std::cerr << "Arrangement error: " << e.what() << '\n';
+  }
+}

@@ -150,7 +150,8 @@ PYBIND11_MODULE(objects_module, handle)
       .def("get_walls", &Room::get_walls) // shared_ptr
       .def("get_wall", &Room::get_wall)   // shared_ptr
       .def("get_near_distance", &Room::get_near_distance)
-      .def("is_inside", &Room::is_inside)
+      .def("is_obj_inside", &Room::is_obj_inside)
+      .def("is_point_inside", &Room::is_point_inside)
       .def("__repr__", [](const Room& r) {
           auto origin = r.get_origin();
           auto dims = r.get_dimensions();

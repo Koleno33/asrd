@@ -35,8 +35,8 @@ float Cube::calculate_distance_to_wall(const Wall& wall) const
       (fabsf(wall_normal.x) * size.x / 2.0f) +
       (fabsf(wall_normal.y) * size.y / 2.0f) + 
       (fabsf(wall_normal.z) * size.z / 2.0f);
-  
   float center_distance = wall.calc_distance_to_point(position);
+
   return center_distance - half_size_projection;
 }
 

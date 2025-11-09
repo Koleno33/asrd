@@ -1,7 +1,13 @@
 #include <graphics/room.h>
+#include <graphics/cube.h>
+#include <graphics/sphere.h>
+#include <raymath.h>
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <cmath>
+#include <iostream>
+#include <typeinfo>
 
 Room::Room(const Vector3& origin, const Vector3& dimensions, const Color& wireframe_color)
     : origin(origin), dimensions(dimensions), wireframe_color(wireframe_color) 
@@ -82,7 +88,7 @@ void Room::init_walls()
 
 void Room::draw(const Vector3& camera_position) const 
 {
-  bool camera_inside = is_inside(camera_position);
+  bool camera_inside = is_point_inside(camera_position);
   
   for (const auto& wall : walls) {
     auto vertices = wall->get_vertices();
@@ -114,7 +120,7 @@ void Room::draw(const Vector3& camera_position) const
 
 Vector3 Room::get_center() const 
 {
-  // Центр находится над центром пола на половине высоты
+  // Центр комнаты находится в центре пола поднятом на половине высоты
   return Vector3{
     origin.x,
     origin.y + dimensions.y / 2,
@@ -170,7 +176,7 @@ float Room::get_near_distance(const Vector3& point) const
   return min_dist;
 }
 
-bool Room::is_inside(const Vector3& point) const 
+bool Room::is_point_inside(const Vector3& point) const 
 {
   float half_width = dimensions.x / 2.0f;
   float half_depth = dimensions.z / 2.0f;
@@ -178,5 +184,33 @@ bool Room::is_inside(const Vector3& point) const
   return point.x >= origin.x - half_width && point.x <= origin.x + half_width &&
          point.y >= origin.y && point.y <= origin.y + dimensions.y &&
          point.z >= origin.z - half_depth && point.z <= origin.z + half_depth;
+}
+
+bool Room::is_obj_inside(const Object& obj) const 
+{
+  float half_width = dimensions.x / 2.0f;
+  float half_depth = dimensions.z / 2.0f;
+
+  Vector3 obj_size;
+  Vector3 obj_pos;
+  try {
+    const Cube& cube = dynamic_cast<const Cube&>(obj);
+    obj_size = Vector3Scale(cube.get_size(), 0.5f);
+    obj_pos = cube.get_position();
+  }
+  catch (std::bad_cast) {
+    const Sphere& sphere = dynamic_cast<const Sphere&>(obj);
+    obj_size = Vector3({ sphere.get_radius(),
+                         sphere.get_radius(),
+                         sphere.get_radius() });
+    obj_pos = sphere.get_position();
+  }
+
+  return (obj_pos.x - obj_size.x) >= (origin.x - half_width) &&
+         (obj_pos.x + obj_size.x) <= (origin.x + half_width) &&
+         (obj_pos.y - obj_size.y) >= origin.y &&
+         (obj_pos.y + obj_size.y) <= (origin.y + dimensions.y) &&
+         (obj_pos.z - obj_size.z) >= (origin.z - half_depth) &&
+         (obj_pos.z + obj_size.z) <= (origin.z + half_depth);
 }
 

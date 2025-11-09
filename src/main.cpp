@@ -7,6 +7,23 @@
 #include <logic/objvalidator.h>
 #include <iostream>
 
+std::map<SurfaceType, std::string> surfacetype_str_map = {
+  {SurfaceType::FLOOR, "FLOOR"},
+  {SurfaceType::CEILING, "CEILING"},
+  {SurfaceType::WALL_FRONT, "WALL_FRONT"},
+  {SurfaceType::WALL_BACK, "WALL_BACK"},
+  {SurfaceType::WALL_LEFT, "WALL_LEFT"},
+  {SurfaceType::WALL_RIGHT, "WALL_RIGHT"}
+};
+
+std::string surfacetype_to_str(SurfaceType type) {
+  auto it = surfacetype_str_map.find(type);
+  if (it != surfacetype_str_map.end()) {
+      return it->second;
+  }
+  return "Unknown Surface Type"; 
+}
+
 int main(void) 
 {
   constexpr int screen_width  = 800;
@@ -32,6 +49,8 @@ int main(void)
   float mousesens = 0.003f;
   float movspeed = 0.09f;
 
+  bool cursor_enabled { false };
+
   HideCursor();
   DisableCursor();
  
@@ -45,12 +64,12 @@ int main(void)
   );
 
   auto cube2 = std::make_shared<Cube> (
-    (Vector3){ -3.0f, 1.0f, -3.0f },
+    (Vector3){ -3.0f, 1.0f, -1.5f },
     (Vector3){ 2.0f, 2.0f, 2.0f }
   );
 
   auto cube3 = std::make_shared<Cube> (
-    (Vector3){ 5.0f, 0.5f, 5.0f },
+    (Vector3){ -9.5f, 0.5f, 5.0f },
     (Vector3){ 1.0f, 1.0f, 1.0f }
   );
 
@@ -76,6 +95,24 @@ int main(void)
     BLUE                                 // wireframe color
   );
 
+  Vector3 room_center = room->get_center();
+  Vector3 room_origin = room->get_origin();
+  std::cout << "Room center is at " << room_center.x << " " << room_center.y << " " << room_center.z << '\n';
+  std::cout << "Room origin is at " << room_origin.x << " " << room_origin.y << " " << room_origin.z << '\n';
+  // Walls
+  std::cout << "*******************************************************\n";
+  for (int i = 0; i < objects.size(); ++i) {
+    for (int j = 0; j < room->get_walls().size(); ++j) {
+      std::shared_ptr<Object> obja = objects[i];
+      std::shared_ptr<const Wall> wall = room->get_walls()[j];
+      std::cout << "Distance between " << obja->get_type() << obja->get_id() << " and " << surfacetype_to_str(wall->get_type()) 
+                << "\t is \t" << obja->calculate_distance_to_wall(*wall) << "\t (Object is " << (room->is_obj_inside(*obja)
+                ? "inside room)" : "not inside room)");
+      std::cout << '\n';
+    }
+  }
+  std::cout << "-------------------------------------------------------\n\n";
+
   // Выводим все объекты и расстояния между ними в stdout
   std::cout << "*******************************************************\n";
   for (int i = 0; i < objects.size(); ++i) {
@@ -92,6 +129,10 @@ int main(void)
 
   // Временно единоразовая проверка
   validator.validate(objects, room);
+
+  // Кнопка компоновки
+  Rectangle arrange_btn { screen_width - 150, 10, 140, 40 };
+  bool arrange_btn_pressed { false };
 
   while (!WindowShouldClose()) {
     Vector2 cur_mouse_pos = GetMousePosition();
@@ -121,6 +162,18 @@ int main(void)
     };
     right = Vector3Normalize(right);
 
+    if (IsKeyPressed(KEY_TAB)) {
+      cursor_enabled = !cursor_enabled;
+      if (cursor_enabled) {
+        EnableCursor();
+        ShowCursor();
+      } 
+      else {
+        DisableCursor();
+        HideCursor();
+      }
+    }
+
     if (IsKeyDown(KEY_W)) {
       camera.position = Vector3Add(camera.position, Vector3Scale(forward, movspeed));
     }
@@ -140,6 +193,10 @@ int main(void)
       camera.position.y += movspeed;
     }
 
+    if (IsKeyPressed(KEY_ENTER)) {
+      arrange_btn_pressed = true;
+    }
+
     // Рассчитываем новый target на основе углов
     Vector3 new_direction = {
       cosf(camera_yaw) * cosf(camera_pitch),
@@ -152,10 +209,26 @@ int main(void)
     // Обновляем позицию мыши для следующего кадра
     prev_mouse_pos = cur_mouse_pos;
 
+    // Обработка нажатия на кнопку компоновки
+    if (CheckCollisionPointRec(GetMousePosition(), arrange_btn) && 
+        IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+      arrange_btn_pressed = true;
+    }
+
+    if (arrange_btn_pressed) {
+      validator.arrange_objs(objects, room);
+      validator.validate(objects, room);
+      arrange_btn_pressed = false;
+    }
+
     if (IsKeyPressed(KEY_Q)) break;
 
     BeginDrawing();
     ClearBackground(RAYWHITE);
+    
+    // Отрисовка кнопки
+    DrawRectangleRec(arrange_btn, arrange_btn_pressed ? DARKGRAY : LIGHTGRAY);
+    DrawText("Arrange", arrange_btn.x + 10, arrange_btn.y + 10, 20, DARKGRAY);
 
     BeginMode3D(camera);
 
