@@ -469,9 +469,9 @@ class ObjectArrangerPython:
             padding = max(obj.size.x, obj.size.y, obj.size.z) / 2
             
         safe_center = Vector3(
-            room_center.x + padding,
+            room_center.x + padding - room_dims.x / 2,
             room_center.y + padding - room_dims.y / 2,
-            room_center.z + padding
+            room_center.z + padding - room_dims.z / 2
         )
         
         safe_dims = Vector3(
@@ -482,7 +482,7 @@ class ObjectArrangerPython:
         
         # generating random position
         new_x = random.uniform(safe_center.x, safe_center.x + safe_dims.x) * random.choice([-1, 1])
-        new_y = random.uniform(safe_center.y, safe_center.y + safe_dims.y)
+        new_y = random.uniform(safe_center.y, safe_center.y + safe_dims.y) 
         new_z = random.uniform(safe_center.z, safe_center.z + safe_dims.z) * random.choice([-1, 1])
 
         new_position = Vector3(new_x, new_y, new_z)
@@ -492,22 +492,16 @@ class ObjectArrangerPython:
             match wall:
                 case "FLOOR": 
                     new_y = room_center.y - safe_dims.y + wall_distances[wall]
-                    break
                 case "CEILING": 
                     new_y = room_center.y + safe_dims.y - wall_distances[wall]
-                    break
                 case "WALL_FRONT": 
                     new_z = room_center.z - safe_dims.z + wall_distances[wall]
-                    break
                 case "WALL_BACK": 
                     new_z = room_center.z + safe_dims.z - wall_distances[wall]
-                    break
                 case "WALL_LEFT":
                     new_x = room_center.x - safe_dims.x + wall_distances[wall]
-                    break
                 case "WALL_RIGHT": 
                     new_x = room_center.x + safe_dims.x - wall_distances[wall]
-                    break
         
         new_position = Vector3(new_x, new_y, new_z)
 
