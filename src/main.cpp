@@ -29,6 +29,7 @@ int main(void)
   constexpr int screen_width  = 800;
   constexpr int screen_height = 450;
 
+  SetConfigFlags(FLAG_WINDOW_RESIZABLE); 
   InitWindow(screen_width, screen_height, "AI Ship Room Designer");
 
   Camera camera = { 0 };
