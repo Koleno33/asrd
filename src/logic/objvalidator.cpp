@@ -1,8 +1,8 @@
-#include <cstdint>
 #include <logic/objvalidator.h>
+#include <cstdint>
 #include <memory>
-#include <pybind11/pytypes.h>
 #include <iostream>
+#include <pybind11/pytypes.h>
 #include <sys/types.h>
 
 Color ObjValidator::get_color_from_status(const std::string& status)

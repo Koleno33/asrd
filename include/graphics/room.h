@@ -1,12 +1,12 @@
 #ifndef ROOM_H
 #define ROOM_H
 
-#include <raylib.h>
+#include <graphics/wall.h>
+#include <graphics/object.h>
 #include <array>
 #include <vector>
 #include <memory>
-#include <graphics/wall.h>
-#include <graphics/object.h>
+#include <raylib.h>
 
 class OBJECT_API Room 
 {

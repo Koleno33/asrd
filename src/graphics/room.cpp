@@ -1,13 +1,13 @@
 #include <graphics/room.h>
 #include <graphics/cube.h>
 #include <graphics/sphere.h>
-#include <raymath.h>
 #include <algorithm>
 #include <limits>
 #include <memory>
 #include <cmath>
 #include <iostream>
 #include <typeinfo>
+#include <raymath.h>
 
 Room::Room(const Vector3& origin, const Vector3& dimensions, const Color& wireframe_color)
     : origin(origin), dimensions(dimensions), wireframe_color(wireframe_color) 

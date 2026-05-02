@@ -1,8 +1,8 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include <raylib.h>
 #include <atomic>
+#include <raylib.h>
 
 #ifdef _WIN32
   #ifdef BUILDING_DLL

@@ -1,11 +1,11 @@
-#include <memory>
-#include <raylib.h>
-#include <raymath.h>
+#include <logic/objvalidator.h>
 #include <graphics/cube.h>
 #include <graphics/sphere.h>
 #include <graphics/room.h>
-#include <logic/objvalidator.h>
+#include <memory>
 #include <iostream>
+#include <raylib.h>
+#include <raymath.h>
 
 std::map<SurfaceType, std::string> surfacetype_str_map = {
   {SurfaceType::FLOOR, "FLOOR"},

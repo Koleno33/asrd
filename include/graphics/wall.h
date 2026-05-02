@@ -1,9 +1,9 @@
 #ifndef WALL_H
 #define WALL_H
 
-#include <raylib.h>
-#include <array>
 #include <graphics/object.h>
+#include <array>
+#include <raylib.h>
 
 enum class OBJECT_API SurfaceType
 {
