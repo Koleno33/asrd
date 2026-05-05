@@ -3,6 +3,7 @@
 #include <graphics/wall.h>
 #include <cmath>
 #include <raymath.h>
+#include <rlgl.h>
 
 Cube::Cube(const Vector3& pos, const Vector3& size, Color color)
   : Object(pos), size(size) 
@@ -18,8 +19,14 @@ const char* Cube::get_type() const
 void Cube::draw() const 
 {
   // Using raylib for visualization
-  DrawCubeV(position, size, color);
-  DrawCubeWiresV(position, size, DARKGRAY);
+  rlPushMatrix();
+      rlTranslatef(position.x, position.y, position.z);
+      rlRotatef(angle_y, 0.0f, 1.0f, 0.0f);
+
+      // position is 0, 0, 0 after translation
+      DrawCubeV({0, 0, 0}, size, color);
+      DrawCubeWiresV({0, 0, 0}, size, DARKGRAY);
+  rlPopMatrix();
 }
 
 void Cube::set_size(const Vector3& newsize) 
