@@ -4,7 +4,7 @@
 std::atomic<uint64_t> Object::nextid{1};
 
 Object::Object(const Vector3& pos) 
-  : id(nextid.fetch_add(1)), position(pos) 
+  : id(nextid.fetch_add(1)), position(pos), angle_y(0.0f)
 {
 }
 
