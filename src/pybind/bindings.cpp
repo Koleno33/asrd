@@ -55,7 +55,10 @@ PYBIND11_MODULE(objects_module, handle)
     .def("get_type", &Object::get_type)
     .def("calculate_distance", &Object::calculate_distance)
     .def("calculate_distance_to_wall", &Object::calculate_distance_to_wall)
-    .def("check_collision", &Object::check_collision);
+    .def("check_collision", &Object::check_collision)
+    .def("get_projection_on_axis", &Object::get_projection_on_axis,
+         py::arg("axis"),
+         "Return half of the object's projection onto the given world-space axis");
 
   // Cube class
   py::class_<Cube, Object, std::shared_ptr<Cube>>(handle, "Cube")
@@ -70,6 +73,7 @@ PYBIND11_MODULE(objects_module, handle)
     .def("calculate_distance", &Cube::calculate_distance)
     .def("check_collision", &Cube::check_collision)
     .def("calculate_distance_to_wall", &Cube::calculate_distance_to_wall)
+    .def("get_projection_on_axis", &Cube::get_projection_on_axis)
     
     // String representation
     .def("__repr__", [](const Cube& c) {
@@ -96,6 +100,8 @@ PYBIND11_MODULE(objects_module, handle)
     .def("calculate_distance", &Sphere::calculate_distance)
     .def("check_collision", &Sphere::check_collision)
     .def("calculate_distance_to_wall", &Sphere::calculate_distance_to_wall)
+
+    .def("get_projection_on_axis", &Sphere::get_projection_on_axis)
     
     // String representation
     .def("__repr__", [](const Sphere& s) {

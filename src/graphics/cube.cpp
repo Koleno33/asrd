@@ -169,3 +169,15 @@ bool Cube::check_collision_with_sphere(const Sphere& other) const
 
   return Vector3DistanceSqr(closest, local_diff) <= (other.get_radius() * other.get_radius());
 }
+
+float Cube::get_projection_on_axis(const Vector3& axis) const
+{
+    // Поворачиваем ось обратно в локальную систему куба
+    float angle_rad = angle_y * DEG2RAD;
+    // Обратный поворот вокруг Y: поворачиваем ось на -angle_y
+    Vector3 local_axis = Vector3RotateByAxisAngle(axis, {0.0f, 1.0f, 0.0f}, -angle_rad);
+    // Проекция полуразмеров
+    return fabsf(local_axis.x) * size.x * 0.5f +
+           fabsf(local_axis.y) * size.y * 0.5f +
+           fabsf(local_axis.z) * size.z * 0.5f;
+}

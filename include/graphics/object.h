@@ -64,6 +64,9 @@ public:
   virtual float calculate_distance_to_sphere(const Sphere& other) const = 0;
   virtual bool check_collision_with_cube(const Cube& other) const = 0;
   virtual bool check_collision_with_sphere(const Sphere& other) const = 0;
+
+  // Виртуальынй метод получения половины проекции объекта на заданную ось (в общих координатах)
+  virtual float get_projection_on_axis(const Vector3& axis) const = 0;
 };
 
 #endif
