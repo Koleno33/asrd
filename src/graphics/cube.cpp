@@ -55,12 +55,48 @@ float Cube::calculate_distance(const Object& other) const
 
 float Cube::calculate_distance_to_cube(const Cube& other) const
 {
-  Vector3 diff = {
-    fabs(position.x - other.position.x) - (size.x + other.size.x) * 0.5f,
-    fabs(position.y - other.position.y) - (size.y + other.size.y) * 0.5f,
-    fabs(position.z - other.position.z) - (size.z + other.size.z) * 0.5f
+  float a1 = angle_y * DEG2RAD;
+  float a2 = other.angle_y * DEG2RAD;
+
+  Vector3 h1 = { size.x * 0.5f, size.y * 0.5f, size.z * 0.5f };
+  Vector3 h2 = { other.size.x * 0.5f, other.size.y * 0.5f, other.size.z * 0.5f };
+
+  // Vertical distance
+  float dy = fabsf(position.y - other.position.y) - (h1.y + h2.y);
+  float dist_y = fmaxf(0.0f, dy);
+
+  // 2D distance in XZ plane (OBB vs OBB with parallel Y axis)
+  Vector2 c1 = { position.x, position.z };
+  Vector2 c2 = { other.position.x, other.position.z };
+  Vector2 e1 = { h1.x, h1.z };
+  Vector2 e2 = { h2.x, h2.z };
+
+  float cos_a1 = cosf(a1), sin_a1 = sinf(a1);
+  float cos_a2 = cosf(a2), sin_a2 = sinf(a2);
+
+  auto compute_gap = [&](Vector2 axis) -> float {
+      float d = (c2.x - c1.x) * axis.x + (c2.y - c1.y) * axis.y;
+      float r1 = fabsf(e1.x * (cos_a1 * axis.x + sin_a1 * axis.y)) +
+                 fabsf(e1.y * (-sin_a1 * axis.x + cos_a1 * axis.y));
+      float r2 = fabsf(e2.x * (cos_a2 * axis.x + sin_a2 * axis.y)) +
+                 fabsf(e2.y * (-sin_a2 * axis.x + cos_a2 * axis.y));
+      return fabsf(d) - (r1 + r2);
   };
-  return Vector3Length({fmaxf(diff.x, 0), fmaxf(diff.y, 0), fmaxf(diff.z, 0)});
+
+  float max_gap = 0.0f;
+  float gap;
+
+  gap = compute_gap({cos_a1, sin_a1});        // axis: local X of cube1
+  if (gap > max_gap) max_gap = gap;
+  gap = compute_gap({-sin_a1, cos_a1});       // axis: local Z of cube1
+  if (gap > max_gap) max_gap = gap;
+  gap = compute_gap({cos_a2, sin_a2});        // axis: local X of cube2
+  if (gap > max_gap) max_gap = gap;
+  gap = compute_gap({-sin_a2, cos_a2});       // axis: local Z of cube2
+  if (gap > max_gap) max_gap = gap;
+
+  float dist_xz = fmaxf(0.0f, max_gap);
+  return sqrtf(dist_xz * dist_xz + dist_y * dist_y);
 }
 
 float Cube::calculate_distance_to_sphere(const Sphere& other) const
