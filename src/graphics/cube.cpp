@@ -120,18 +120,52 @@ bool Cube::check_collision(const Object& other) const
   return other.check_collision_with_cube(*this);
 }
 
-bool Cube::check_collision_with_cube(const Cube& other) const {
-  return (fabs(position.x - other.position.x) < (size.x + other.size.x) * 0.5f) &&
-         (fabs(position.y - other.position.y) < (size.y + other.size.y) * 0.5f) &&
-         (fabs(position.z - other.position.z) < (size.z + other.size.z) * 0.5f);
-}
+bool Cube::check_collision_with_cube(const Cube& other) const 
+{
+  // Quick Y check
+  float dy = fabsf(position.y - other.position.y);
+  if (dy >= (size.y + other.size.y) * 0.5f) return false;
 
-bool Cube::check_collision_with_sphere(const Sphere& other) const {
-  Vector3 closest = {
-    fmaxf(position.x - size.x * 0.5f, fminf(other.get_position().x, position.x + size.x * 0.5f)),
-    fmaxf(position.y - size.y * 0.5f, fminf(other.get_position().y, position.y + size.y * 0.5f)),
-    fmaxf(position.z - size.z * 0.5f, fminf(other.get_position().z, position.z + size.z * 0.5f))
+  float a1 = angle_y * DEG2RAD;
+  float a2 = other.angle_y * DEG2RAD;
+
+  Vector2 c1 = { position.x, position.z };
+  Vector2 c2 = { other.position.x, other.position.z };
+  Vector2 e1 = { size.x * 0.5f, size.z * 0.5f };
+  Vector2 e2 = { other.size.x * 0.5f, other.size.z * 0.5f };
+
+  float cos_a1 = cosf(a1), sin_a1 = sinf(a1);
+  float cos_a2 = cosf(a2), sin_a2 = sinf(a2);
+
+  auto overlap_on_axis = [&](Vector2 axis) -> bool {
+      float d = fabsf((c2.x - c1.x) * axis.x + (c2.y - c1.y) * axis.y);
+      float r1 = fabsf(e1.x * (cos_a1 * axis.x + sin_a1 * axis.y)) +
+                 fabsf(e1.y * (-sin_a1 * axis.x + cos_a1 * axis.y));
+      float r2 = fabsf(e2.x * (cos_a2 * axis.x + sin_a2 * axis.y)) +
+                 fabsf(e2.y * (-sin_a2 * axis.x + cos_a2 * axis.y));
+      return d <= (r1 + r2 + 1e-6f); // small tolerance
   };
-  return Vector3DistanceSqr(closest, other.get_position()) <= (other.get_radius() * other.get_radius());
+
+  if (!overlap_on_axis({cos_a1, sin_a1})) return false;   // X axis of cube1
+  if (!overlap_on_axis({-sin_a1, cos_a1})) return false;  // Z axis of cube1
+  if (!overlap_on_axis({cos_a2, sin_a2})) return false;   // X axis of cube2
+  if (!overlap_on_axis({-sin_a2, cos_a2})) return false;  // Z axis of cube2
+
+  return true;
 }
 
+bool Cube::check_collision_with_sphere(const Sphere& other) const 
+{
+  Vector3 diff = Vector3Subtract(other.get_position(), position);
+  float angle_rad = angle_y * DEG2RAD;
+  Vector3 local_diff = Vector3RotateByAxisAngle(diff, {0.0f, 1.0f, 0.0f}, -angle_rad);
+  Vector3 half = { size.x * 0.5f, size.y * 0.5f, size.z * 0.5f };
+
+  Vector3 closest = {
+      fmaxf(-half.x, fminf(local_diff.x, half.x)),
+      fmaxf(-half.y, fminf(local_diff.y, half.y)),
+      fmaxf(-half.z, fminf(local_diff.z, half.z))
+  };
+
+  return Vector3DistanceSqr(closest, local_diff) <= (other.get_radius() * other.get_radius());
+}
