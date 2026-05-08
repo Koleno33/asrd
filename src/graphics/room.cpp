@@ -188,29 +188,65 @@ bool Room::is_point_inside(const Vector3& point) const
 
 bool Room::is_obj_inside(const Object& obj) const 
 {
-  float half_width = dimensions.x / 2.0f;
-  float half_depth = dimensions.z / 2.0f;
+    float half_width = dimensions.x / 2.0f;
+    float half_depth = dimensions.z / 2.0f;
 
-  Vector3 obj_size;
-  Vector3 obj_pos;
-  try {
-    const Cube& cube = dynamic_cast<const Cube&>(obj);
-    obj_size = Vector3Scale(cube.get_size(), 0.5f);
-    obj_pos = cube.get_position();
-  }
-  catch (std::bad_cast) {
-    const Sphere& sphere = dynamic_cast<const Sphere&>(obj);
-    obj_size = Vector3({ sphere.get_radius(),
-                         sphere.get_radius(),
-                         sphere.get_radius() });
-    obj_pos = sphere.get_position();
-  }
+    float min_x = origin.x - half_width;
+    float max_x = origin.x + half_width;
+    float min_y = origin.y;
+    float max_y = origin.y + dimensions.y;
+    float min_z = origin.z - half_depth;
+    float max_z = origin.z + half_depth;
 
-  return (obj_pos.x - obj_size.x) >= (origin.x - half_width) &&
-         (obj_pos.x + obj_size.x) <= (origin.x + half_width) &&
-         (obj_pos.y - obj_size.y) >= origin.y &&
-         (obj_pos.y + obj_size.y) <= (origin.y + dimensions.y) &&
-         (obj_pos.z - obj_size.z) >= (origin.z - half_depth) &&
-         (obj_pos.z + obj_size.z) <= (origin.z + half_depth);
+    // Для сферы используем прежний подход (AABB сферы)
+    const Sphere* sphere = dynamic_cast<const Sphere*>(&obj);
+    if (sphere) {
+        float r = sphere->get_radius();
+        Vector3 pos = sphere->get_position();
+        return (pos.x - r) >= min_x && (pos.x + r) <= max_x &&
+               (pos.y - r) >= min_y && (pos.y + r) <= max_y &&
+               (pos.z - r) >= min_z && (pos.z + r) <= max_z;
+    }
+
+    // Для куба учитываем поворот (только вокруг Y, как задано в angle_y)
+    const Cube* cube = dynamic_cast<const Cube*>(&obj);
+    if (cube) {
+        Vector3 pos = cube->get_position();
+        Vector3 half = Vector3Scale(cube->get_size(), 0.5f);
+        float angle = cube->get_angle() * DEG2RAD;  // угол в радианах
+
+        // Полуоси OBB в локальной системе (до поворота)
+        Vector3 axes[3] = {
+            { half.x, 0, 0 },
+            { 0, half.y, 0 },
+            { 0, 0, half.z }
+        };
+
+        // Поворот вокруг Y: X и Z компоненты вращаются, Y не меняется
+        float cos_a = cosf(angle);
+        float sin_a = sinf(angle);
+        // Поворачиваем оси
+        axes[0] = { half.x * cos_a, 0, half.x * sin_a };
+        axes[2] = { -half.z * sin_a, 0, half.z * cos_a };
+        // Y ось не меняется: axes[1] = {0, half.y, 0}
+
+        // Проверяем все 8 вершин
+        for (int i = 0; i < 8; ++i) {
+            Vector3 corner = pos;
+            corner = Vector3Add(corner, Vector3Scale(axes[0], (i & 1) ? 1.0f : -1.0f));
+            corner = Vector3Add(corner, Vector3Scale(axes[1], (i & 2) ? 1.0f : -1.0f));
+            corner = Vector3Add(corner, Vector3Scale(axes[2], (i & 4) ? 1.0f : -1.0f));
+
+            if (corner.x < min_x || corner.x > max_x ||
+                corner.y < min_y || corner.y > max_y ||
+                corner.z < min_z || corner.z > max_z) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Неизвестный тип — считаем, что не внутри
+    return false;
 }
 
