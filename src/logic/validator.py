@@ -488,20 +488,37 @@ class ObjectArrangerPython:
         new_position = Vector3(new_x, new_y, new_z)
 
         print(f"Placed {obj} position from random {new_position} ", end='')
-        for wall in wall_distances:
-            match wall:
-                case "FLOOR": 
-                    new_y = room_center.y - safe_dims.y + wall_distances[wall]
-                case "CEILING": 
-                    new_y = room_center.y + safe_dims.y - wall_distances[wall]
-                case "WALL_FRONT": 
-                    new_z = room_center.z - safe_dims.z + wall_distances[wall]
-                case "WALL_BACK": 
-                    new_z = room_center.z + safe_dims.z - wall_distances[wall]
+        for wall_str, need_dist in wall_distances.items():
+            wall_obj = self._get_wall_by_string(wall_str)
+            if not wall_obj:
+                continue
+            normal = wall_obj.get_normal()
+            # Вычисляем полупроекцию объекта на нормаль стены (уже с учётом поворота куба)
+            half_proj = obj.get_projection_on_axis(normal)
+            target_center_dist = need_dist + half_proj  # требуемое расстояние от центра до плоскости стены
+
+            origin = self.__room.get_origin()
+            dims = self.__room.get_dimensions()
+
+            match wall_str:
+                case "FLOOR":
+                    # нормаль (0,1,0), плоскость y = origin.y
+                    new_y = origin.y + target_center_dist
+                case "CEILING":
+                    # нормаль (0,-1,0), плоскость y = origin.y + dimensions.y
+                    new_y = origin.y + dims.y - target_center_dist
+                case "WALL_FRONT":
+                    # нормаль (0,0,1), плоскость z = origin.z - dims.z/2
+                    new_z = origin.z - dims.z/2 + target_center_dist
+                case "WALL_BACK":
+                    # нормаль (0,0,-1), плоскость z = origin.z + dims.z/2
+                    new_z = origin.z + dims.z/2 - target_center_dist
                 case "WALL_LEFT":
-                    new_x = room_center.x - safe_dims.x + wall_distances[wall]
-                case "WALL_RIGHT": 
-                    new_x = room_center.x + safe_dims.x - wall_distances[wall]
+                    # нормаль (1,0,0), плоскость x = origin.x - dims.x/2
+                    new_x = origin.x - dims.x/2 + target_center_dist
+                case "WALL_RIGHT":
+                    # нормаль (-1,0,0), плоскость x = origin.x + dims.x/2
+                    new_x = origin.x + dims.x/2 - target_center_dist
         
         new_position = Vector3(new_x, new_y, new_z)
 
