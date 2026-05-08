@@ -101,12 +101,18 @@ float Cube::calculate_distance_to_cube(const Cube& other) const
 
 float Cube::calculate_distance_to_sphere(const Sphere& other) const
 {
+  Vector3 diff = Vector3Subtract(other.get_position(), position);
+  float angle_rad = angle_y * DEG2RAD;
+  Vector3 local_diff = Vector3RotateByAxisAngle(diff, {0.0f, 1.0f, 0.0f}, -angle_rad);
+  Vector3 half = { size.x * 0.5f, size.y * 0.5f, size.z * 0.5f };
+
   Vector3 closest = {
-    fmaxf(position.x - size.x * 0.5f, fminf(other.get_position().x, position.x + size.x * 0.5f)),
-    fmaxf(position.y - size.y * 0.5f, fminf(other.get_position().y, position.y + size.y * 0.5f)),
-    fmaxf(position.z - size.z * 0.5f, fminf(other.get_position().z, position.z + size.z * 0.5f))
+      fmaxf(-half.x, fminf(local_diff.x, half.x)),
+      fmaxf(-half.y, fminf(local_diff.y, half.y)),
+      fmaxf(-half.z, fminf(local_diff.z, half.z))
   };
-  return fmaxf(0, Vector3Distance(closest, other.get_position()) - other.get_radius());
+
+  return fmaxf(0.0f, Vector3Distance(closest, local_diff) - other.get_radius());
 }
 
 bool Cube::check_collision(const Object& other) const
