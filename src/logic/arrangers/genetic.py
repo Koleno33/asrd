@@ -30,8 +30,8 @@ class GeneticArranger(BaseArranger):
         print(f"Starting genetic arrangement... (pop={self.pop_size}, gens={self.max_generations})")
         
         # 1. Составляем список свободных объектов (не locked)
-        self.free_objects = [obj for obj in self._objects if not obj.is_locked()]
-        self.locked_objects = [obj for obj in self._objects if obj.is_locked()]
+        self.free_objects = [obj for obj in self._objects if not obj.locked]
+        self.locked_objects = [obj for obj in self._objects if obj.locked]
         self.obj_index_map = {obj.id: obj for obj in self._objects}
 
         # 2. Определяем размер генотипа: 4 гена на каждый свободный объект (x,y,z,angle)
