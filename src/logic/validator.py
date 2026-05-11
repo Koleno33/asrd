@@ -3,8 +3,21 @@ from typing import TYPE_CHECKING
 from typing import List, Dict
 from enum import Enum
 from objects_module import Vector3, Color, Room, Wall, SurfaceType, Object
+from dataclasses import dataclass, field
 import random
 import math
+
+
+@dataclass
+class ConstraintEvaluation:
+    """
+    - feasible       (bool) : все ли hard-ограничения выполнены
+    - violations     (list) : список словарей с деталями нарушений
+    - total_violation(float): суммарная мера нарушения (для сравнения недопустимых особей)
+    """
+    feasible: bool = True
+    violations: List[Dict] = field(default_factory=list)
+    total_violation: float = 0.0
 
 
 class Rule:
@@ -64,6 +77,31 @@ class Validator:
         self.__rules = DocumentParser.parse_document("assets/docs/doc.txt")
         self.__objects = objects
         self.__walls = room.get_walls()
+
+
+    def _get_surface_type_from_str(self, s):
+        wall_mapping = {
+            "FLOOR": SurfaceType.FLOOR,
+            "CEILING": SurfaceType.CEILING,
+            "WALL_FRONT": SurfaceType.WALL_FRONT,
+            "WALL_BACK": SurfaceType.WALL_BACK,
+            "WALL_LEFT": SurfaceType.WALL_LEFT,
+            "WALL_RIGHT": SurfaceType.WALL_RIGHT
+        }
+        return wall_mapping.get(s)
+
+
+    def _get_objects_by_type_from_list(self, obj_list, type_str):
+        """Фильтрует список объектов по строке типа (как в get_objects)."""
+        if type_str == "any":
+            return obj_list
+        elif type_str == "cube":
+            return [o for o in obj_list if o.get_type() == "Cube"]
+        elif type_str == "sphere":
+            return [o for o in obj_list if o.get_type() == "Sphere"]
+        else:
+            return []
+
     
     def validate(self):
         result = list()
@@ -101,17 +139,6 @@ class Validator:
                     return w
             return None
 
-        def get_surface_type(s):
-            wall_mapping = {
-                "FLOOR": SurfaceType.FLOOR,
-                "CEILING": SurfaceType.CEILING,
-                "WALL_FRONT": SurfaceType.WALL_FRONT,
-                "WALL_BACK": SurfaceType.WALL_BACK,
-                "WALL_LEFT": SurfaceType.WALL_LEFT,
-                "WALL_RIGHT": SurfaceType.WALL_RIGHT
-            }
-            return wall_mapping.get(s)
-
         objs = self.get_objects(rule.object)
 
         # Validation Results
@@ -146,7 +173,7 @@ class Validator:
 
                 for typee in objs_types:
                     if is_wall(typee):
-                        wall = get_surface_type(typee)
+                        wall = self._get_surface_type_from_str(typee)
                         continue
                     objs = self.get_objects(typee)
 
@@ -179,6 +206,88 @@ class Validator:
                           f"Objects: ({obj.get_type()}{obj.id}, {wall_obj.get_type().name})")
 
         return vrs
+
+    def evaluate_constraints(self, objects, room):
+        """
+        Быстрая проверка ограничений без изменения объектов.
+        Возвращает ConstraintEvaluation с полями:
+        """
+        evaluation = ConstraintEvaluation()
+        walls = self.__walls  # уже кэшированы в __init__
+
+        # === Проверка min_distance ===
+        for rule in self.__rules:
+            if rule.name == "min_distance":
+                target_objects = self._get_objects_by_type_from_list(objects, rule.object)
+                req = rule.value
+                for i in range(len(target_objects)):
+                    for j in range(i + 1, len(target_objects)):
+                        obja, objb = target_objects[i], target_objects[j]
+                        dist = obja.calculate_distance(objb)
+                        if dist < req - 1e-6:   # с учётом численной погрешности
+                            evaluation.feasible = False
+                            violation = {
+                                "rule": "min_distance",
+                                "obj_a": obja.id,
+                                "obj_b": objb.id,
+                                "required": req,
+                                "current": dist
+                            }
+                            evaluation.violations.append(violation)
+                            # Штраф пропорционален относительному нарушению
+                            evaluation.total_violation += (req - dist) / req if req > 0 else 1.0
+
+        # === Проверка distance до стен ===
+        for rule in self.__rules:
+            if rule.name == "distance":
+                # Парсим строку типа "cube,WALL_LEFT" или "any,FLOOR"
+                parts = rule.object.split(',')
+                if len(parts) != 2:
+                    continue
+                obj_type_str, wall_str = parts[0], parts[1]
+
+                # Получаем стену
+                wall_type = self._get_surface_type_from_str(wall_str)
+                if wall_type is None:
+                    continue
+                wall = None
+                for w in walls:
+                    if w.get_type() == wall_type:
+                        wall = w
+                        break
+                if wall is None:
+                    continue
+
+                # Объекты указанного типа
+                target_objects = self._get_objects_by_type_from_list(objects, obj_type_str)
+                req = rule.value
+
+                for obj in target_objects:
+                    dist = obj.calculate_distance_to_wall(wall)
+                    if abs(dist - req) > 1e-5:
+                        evaluation.feasible = False
+                        violation = {
+                            "rule": "distance",
+                            "obj": obj.id,
+                            "wall": wall_str,
+                            "required": req,
+                            "current": dist
+                        }
+                        evaluation.violations.append(violation)
+                        evaluation.total_violation += abs(dist - req)
+
+        # === Проверка нахождения внутри комнаты ===
+        for obj in objects:
+            if not room.is_obj_inside(obj):
+                evaluation.feasible = False
+                evaluation.violations.append({
+                    "rule": "inside_room",
+                    "obj": obj.id
+                })
+                # Штраф — большое число
+                evaluation.total_violation += 1000.0
+
+        return evaluation
 
 
 def validate(objs: List[Object], room: Room):
