@@ -123,9 +123,9 @@ class GeneticArranger(BaseArranger):
         for obj in self.free_objects:
             # Генерируем позицию внутри комнаты (наивно, без учёта других объектов)
             if isinstance(obj, Cube):
-                half_sizes = [obj.get_size().x / 2, obj.get_size().y / 2, obj.get_size().z / 2]
+                half_sizes = [obj.size.x / 2, obj.size.y / 2, obj.size.z / 2]
             elif isinstance(obj, Sphere):
-                r = obj.get_radius()
+                r = obj.radius
                 half_sizes = [r, r, r]
             else:
                 half_sizes = [0, 0, 0]
@@ -161,7 +161,7 @@ class GeneticArranger(BaseArranger):
 
             new_obj = obj.clone()  # Возвращает shared_ptr<Object>
             new_obj.position = Vector3(x, y, z)
-            new_obj.set_angle(angle)
+            new_obj.angle = angle
             clones.append(new_obj)
 
         # Добавляем locked объекты (их позиции/углы не меняются)
@@ -203,7 +203,7 @@ class GeneticArranger(BaseArranger):
                 total_error += dx*dx + dy*dy + dz*dz
             ideal_angle = prefs.get("angle")
             if ideal_angle is not None:
-                diff = abs(obj.get_angle() - ideal_angle)
+                diff = abs(obj.angle - ideal_angle)
                 # Угловое отклонение с учётом цикличности
                 if diff > 180:
                     diff = 360 - diff
@@ -270,7 +270,7 @@ class GeneticArranger(BaseArranger):
         idx = 0
         for obj in self.free_objects:
             obj.position = Vector3(genotype[idx], genotype[idx+1], genotype[idx+2])
-            obj.set_angle(genotype[idx+3])
+            obj.angle = genotype[idx+3]
             idx += 4
 
     def _get_current_positions(self) -> Dict[int, Vector3]:

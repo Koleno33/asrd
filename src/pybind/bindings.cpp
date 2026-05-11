@@ -53,12 +53,12 @@ PYBIND11_MODULE(objects_module, handle)
     .def_property_readonly("id", &Object::get_id)
     .def_property("position", &Object::get_position, &Object::set_position)
     .def_property("locked", &Object::is_locked, &Object::set_locked)
+    .def_property("angle", &Object::get_angle, &Object::set_angle)
     .def("clone", &Object::clone, "Create a deep copy with a new unique ID")
     .def("get_type", &Object::get_type)
     .def("calculate_distance", &Object::calculate_distance)
     .def("calculate_distance_to_wall", &Object::calculate_distance_to_wall)
     .def("check_collision", &Object::check_collision)
-    .def("get_angle", &Object::get_angle)
     .def("get_projection_on_axis", &Object::get_projection_on_axis,
          py::arg("axis"),
          "Return half of the object's projection onto the given world-space axis");
