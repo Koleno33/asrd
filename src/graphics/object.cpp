@@ -4,7 +4,7 @@
 std::atomic<uint64_t> Object::nextid{1};
 
 Object::Object(const Vector3& pos) 
-  : id(nextid.fetch_add(1)), position(pos) 
+  : id(nextid.fetch_add(1)), position(pos), angle_y(0.0f)
 {
 }
 
@@ -23,6 +23,11 @@ Color Object::get_color() const
   return color;
 }
 
+float Object::get_angle() const
+{
+  return angle_y;
+}
+
 void Object::set_position(const Vector3& newpos) 
 {
   position = newpos;
@@ -31,5 +36,10 @@ void Object::set_position(const Vector3& newpos)
 void Object::set_color(Color newcolor) 
 {
   color = newcolor;
+}
+
+void Object::set_angle(float new_angle)
+{
+  angle_y = new_angle;
 }
 

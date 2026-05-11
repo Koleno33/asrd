@@ -25,6 +25,7 @@ protected:
   uint64_t id;
   Vector3 position;
   Color color;
+  float angle_y;
 
   // Защищенный конструктор для использования в производных классах
   Object(const Vector3& pos);
@@ -40,10 +41,12 @@ public:
   uint64_t get_id() const;
   Vector3  get_position() const;
   Color    get_color() const;
+  float    get_angle() const;
 
   // Сеттеры
   void set_position(const Vector3& new_pos);
   void set_color(Color);
+  void set_angle(float new_angle);
 
   // Абстрактный метод для отрисовки
   virtual void draw() const = 0;
@@ -61,6 +64,9 @@ public:
   virtual float calculate_distance_to_sphere(const Sphere& other) const = 0;
   virtual bool check_collision_with_cube(const Cube& other) const = 0;
   virtual bool check_collision_with_sphere(const Sphere& other) const = 0;
+
+  // Виртуальынй метод получения половины проекции объекта на заданную ось (в общих координатах)
+  virtual float get_projection_on_axis(const Vector3& axis) const = 0;
 };
 
 #endif

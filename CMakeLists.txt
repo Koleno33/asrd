@@ -64,6 +64,8 @@ add_custom_target(copy_python_files ALL
     COMMAND ${CMAKE_COMMAND} -E copy
             ${SRC_DIR}/logic/validator.py ${CMAKE_BINARY_DIR}/
     COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${SRC_DIR}/logic/arrangers ${CMAKE_BINARY_DIR}/arrangers
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
             ${PROJECT_ROOT}/assets ${CMAKE_BINARY_DIR}/assets
     COMMENT "Copying Python files and assets to build directory"
 )

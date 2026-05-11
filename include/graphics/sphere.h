@@ -29,6 +29,8 @@ public:
   float  calculate_distance_to_sphere(const Sphere& other) const override;
   bool   check_collision_with_cube(const Cube& other) const override;
   bool   check_collision_with_sphere(const Sphere& other) const override;
+
+  float get_projection_on_axis(const Vector3& axis) const override;
 };
 
 #endif

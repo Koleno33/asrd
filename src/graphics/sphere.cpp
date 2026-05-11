@@ -67,3 +67,8 @@ bool Sphere::check_collision_with_sphere(const Sphere& other) const {
   return Vector3DistanceSqr(position, other.position) <= (radius + other.radius) * (radius + other.radius);
 }
 
+float Sphere::get_projection_on_axis(const Vector3& axis) const
+{
+    (void)axis; // для сферы проекция не зависит от направления
+    return radius;
+}
