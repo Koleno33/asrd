@@ -52,6 +52,8 @@ PYBIND11_MODULE(objects_module, handle)
   py::class_<Object, std::shared_ptr<Object>>(handle, "Object")
     .def_property_readonly("id", &Object::get_id)
     .def_property("position", &Object::get_position, &Object::set_position)
+    .def_property("locked", &Object::is_locked, &Object::set_locked)
+    .def("clone", &Object::clone, "Create a deep copy with a new unique ID")
     .def("get_type", &Object::get_type)
     .def("calculate_distance", &Object::calculate_distance)
     .def("calculate_distance_to_wall", &Object::calculate_distance_to_wall)
@@ -75,6 +77,7 @@ PYBIND11_MODULE(objects_module, handle)
     .def("check_collision", &Cube::check_collision)
     .def("calculate_distance_to_wall", &Cube::calculate_distance_to_wall)
     .def("get_projection_on_axis", &Cube::get_projection_on_axis)
+    .def("clone", &Cube::clone)
     
     // String representation
     .def("__repr__", [](const Cube& c) {
@@ -101,8 +104,8 @@ PYBIND11_MODULE(objects_module, handle)
     .def("calculate_distance", &Sphere::calculate_distance)
     .def("check_collision", &Sphere::check_collision)
     .def("calculate_distance_to_wall", &Sphere::calculate_distance_to_wall)
-
     .def("get_projection_on_axis", &Sphere::get_projection_on_axis)
+    .def("clone", &Sphere::clone)
     
     // String representation
     .def("__repr__", [](const Sphere& s) {

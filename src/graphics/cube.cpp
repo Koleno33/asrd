@@ -181,3 +181,11 @@ float Cube::get_projection_on_axis(const Vector3& axis) const
            fabsf(local_axis.y) * size.y * 0.5f +
            fabsf(local_axis.z) * size.z * 0.5f;
 }
+
+std::shared_ptr<Object> Cube::clone() const 
+{
+    auto newCube = std::make_shared<Cube>(position, size, color);
+    newCube->set_angle(angle_y);
+    if (locked) newCube->set_locked(true);
+    return newCube;
+}

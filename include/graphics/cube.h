@@ -27,6 +27,8 @@ public:
   bool   check_collision_with_sphere(const Sphere& other) const override;
 
   float get_projection_on_axis(const Vector3& axis) const override;
+
+  std::shared_ptr<Object> clone() const override;
 };
 
 #endif

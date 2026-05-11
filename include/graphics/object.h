@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <raylib.h>
+#include <memory>
 
 #ifdef _WIN32
   #ifdef BUILDING_DLL
@@ -26,6 +27,7 @@ protected:
   Vector3 position;
   Color color;
   float angle_y;
+  bool locked { false };
 
   // Защищенный конструктор для использования в производных классах
   Object(const Vector3& pos);
@@ -42,17 +44,22 @@ public:
   Vector3  get_position() const;
   Color    get_color() const;
   float    get_angle() const;
+  bool     is_locked() const;
 
   // Сеттеры
   void set_position(const Vector3& new_pos);
   void set_color(Color);
   void set_angle(float new_angle);
+  void set_locked(bool locked_);
 
   // Абстрактный метод для отрисовки
   virtual void draw() const = 0;
 
   // Абстрактный метод для получения типа объекта
   virtual const char* get_type() const = 0;
+  //
+  // Клонирование с новым уникальным ID
+  virtual std::shared_ptr<Object> clone() const = 0;
 
   // Виртуальные методы для коллизий
   virtual float calculate_distance(const Object& other) const = 0;

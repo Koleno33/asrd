@@ -43,3 +43,10 @@ void Object::set_angle(float new_angle)
   angle_y = new_angle;
 }
 
+bool Object::is_locked() const {
+    return locked;
+}
+
+void Object::set_locked(bool locked_) {
+    locked = locked_;
+}

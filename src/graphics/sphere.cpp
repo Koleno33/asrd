@@ -72,3 +72,11 @@ float Sphere::get_projection_on_axis(const Vector3& axis) const
     (void)axis; // для сферы проекция не зависит от направления
     return radius;
 }
+
+std::shared_ptr<Object> Sphere::clone() const 
+{
+    auto newSphere = std::make_shared<Sphere>(position, radius, color);
+    newSphere->set_angle(angle_y);
+    if (locked) newSphere->set_locked(true);
+    return newSphere;
+}
