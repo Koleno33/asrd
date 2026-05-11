@@ -56,6 +56,7 @@ PYBIND11_MODULE(objects_module, handle)
     .def("calculate_distance", &Object::calculate_distance)
     .def("calculate_distance_to_wall", &Object::calculate_distance_to_wall)
     .def("check_collision", &Object::check_collision)
+    .def("get_angle", &Object::get_angle)
     .def("get_projection_on_axis", &Object::get_projection_on_axis,
          py::arg("axis"),
          "Return half of the object's projection onto the given world-space axis");
