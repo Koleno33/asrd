@@ -296,7 +296,7 @@ def validate(objs: List[Object], room: Room):
     vrs = v.validate()
     return vrs
 
-def arrange_objects(objs: List[Object], room: Room, method="monte_carlo"):
+def arrange_objects(objs: List[Object], room: Room, method="genetic"):
     from arrangers.monte_carlo import MonteCarloArranger
     from arrangers.genetic import GeneticArranger
 
