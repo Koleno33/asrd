@@ -52,11 +52,13 @@ PYBIND11_MODULE(objects_module, handle)
   py::class_<Object, std::shared_ptr<Object>>(handle, "Object")
     .def_property_readonly("id", &Object::get_id)
     .def_property("position", &Object::get_position, &Object::set_position)
+    .def_property("locked", &Object::is_locked, &Object::set_locked)
+    .def_property("angle", &Object::get_angle, &Object::set_angle)
+    .def("clone", &Object::clone, "Create a deep copy with a new unique ID")
     .def("get_type", &Object::get_type)
     .def("calculate_distance", &Object::calculate_distance)
     .def("calculate_distance_to_wall", &Object::calculate_distance_to_wall)
     .def("check_collision", &Object::check_collision)
-    .def("get_angle", &Object::get_angle)
     .def("get_projection_on_axis", &Object::get_projection_on_axis,
          py::arg("axis"),
          "Return half of the object's projection onto the given world-space axis");
@@ -75,6 +77,7 @@ PYBIND11_MODULE(objects_module, handle)
     .def("check_collision", &Cube::check_collision)
     .def("calculate_distance_to_wall", &Cube::calculate_distance_to_wall)
     .def("get_projection_on_axis", &Cube::get_projection_on_axis)
+    .def("clone", &Cube::clone)
     
     // String representation
     .def("__repr__", [](const Cube& c) {
@@ -101,8 +104,8 @@ PYBIND11_MODULE(objects_module, handle)
     .def("calculate_distance", &Sphere::calculate_distance)
     .def("check_collision", &Sphere::check_collision)
     .def("calculate_distance_to_wall", &Sphere::calculate_distance_to_wall)
-
     .def("get_projection_on_axis", &Sphere::get_projection_on_axis)
+    .def("clone", &Sphere::clone)
     
     // String representation
     .def("__repr__", [](const Sphere& s) {
@@ -127,6 +130,8 @@ PYBIND11_MODULE(objects_module, handle)
   py::class_<Wall, std::shared_ptr<Wall>>(handle, "Wall")
       .def(py::init<SurfaceType, const Vector3&, float, const std::array<Vector3, 4>&>(),
            py::arg("type"), py::arg("normal"), py::arg("distance"), py::arg("vertices"))
+      .def_property_readonly("distance", &Wall::get_distance,
+           "Signed distance from origin to the wall plane")
       .def("get_type", &Wall::get_type)
       .def("get_normal", &Wall::get_normal)
       .def("get_vertices", &Wall::get_vertices)
