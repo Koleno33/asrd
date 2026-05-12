@@ -110,6 +110,16 @@ class Validator:
             vr = self.validate_rule(rule)
             result += vr
 
+        for i in range(len(self.__objects)):
+            for j in range(i + 1, len(self.__objects)):
+                obja = self.__objects[i]
+                objb = self.__objects[j]
+                if obja.calculate_distance(objb) < self.EPSILON:   # касание или пересечение
+                    result.append(ValidationResult(
+                        ValidationValue.INVALID,
+                        {"type": "collision", "obja": obja.id, "objb": objb.id}
+                    ))
+
         # sorting ValidationResults from good to bad 
         order = list(ValidationValue)
         index_map = { v: i for i, v in enumerate(order) }
@@ -225,7 +235,7 @@ class Validator:
                     for j in range(i + 1, len(target_objects)):
                         obja, objb = target_objects[i], target_objects[j]
                         dist = obja.calculate_distance(objb)
-                        if dist < req - 1e-6:   # с учётом численной погрешности
+                        if dist < req - self.EPSILON:   # с учётом численной погрешности
                             evaluation.feasible = False
                             violation = {
                                 "rule": "min_distance",
@@ -288,8 +298,24 @@ class Validator:
                 # Штраф — большое число
                 evaluation.total_violation += 1000.0
 
-        return evaluation
+        # Проверка на коллизии для всех пар (расстояние < 0)
+        n = len(objects)
+        for i in range(n):
+            for j in range(i + 1, n):
+                obja = objects[i]
+                objb = objects[j]
+                dist = obja.calculate_distance(objb)
+                if dist < -self.EPSILON:   # отрицательное = пересечение
+                    evaluation.feasible = False
+                    evaluation.violations.append({
+                        "rule": "collision",
+                        "obj_a": obja.id,
+                        "obj_b": objb.id,
+                        "current": dist
+                    })
+                    evaluation.total_violation += abs(dist)
 
+        return evaluation
 
 def validate(objs: List[Object], room: Room):
     v = Validator(objs, room)

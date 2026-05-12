@@ -99,10 +99,6 @@ class GeneticArranger(BaseArranger):
                     obj.position.z + normal.z * delta
                 )
 
-                # отладка
-                if obj.id == self._objects[0].id:  # для первого объекта
-                    print(f"Repair {obj.get_type()}{obj.id}: before {obj.position}, rule {wall_str}={req_dist}, half={half}, signed_center={signed_center_dist}, target={target_signed}, delta={delta}")
-
             # Проверка, остался ли объект внутри комнаты
             if not self._room.is_obj_inside(obj):
                 half_sizes = self._get_object_half_sizes(obj)
@@ -117,6 +113,60 @@ class GeneticArranger(BaseArranger):
                     max(y_min, min(obj.position.y, y_max)),
                     max(z_min, min(obj.position.z, z_max))
                 )
+
+    def _resolve_collisions(self, objects, max_iter=50, margin=0.001):
+        """Гарантированно раздвигает пересекающиеся объекты."""
+        changed = False
+        for _ in range(max_iter):
+            any_collision = False
+            n = len(objects)
+            for i in range(n):
+                for j in range(i + 1, n):
+                    a = objects[i]
+                    b = objects[j]
+                    dist = a.calculate_distance(b)
+                    if dist < margin:  # коллизия с учётом зазора
+                        any_collision = True
+                        changed = True
+                        dx = b.position.x - a.position.x
+                        dy = b.position.y - a.position.y
+                        dz = b.position.z - a.position.z
+                        length = math.sqrt(dx*dx + dy*dy + dz*dz)
+                        if length < 1e-6:
+                            dx, dy, dz = random.random()-0.5, random.random()-0.5, random.random()-0.5
+                            length = 1.0
+                        # Сдвиг на величину перекрытия + небольшой зазор
+                        overlap = (-dist) / 2.0 + margin
+                        shift = overlap / length
+                        a.position = Vector3(a.position.x - dx * shift,
+                                             a.position.y - dy * shift,
+                                             a.position.z - dz * shift)
+                        b.position = Vector3(b.position.x + dx * shift,
+                                             b.position.y + dy * shift,
+                                             b.position.z + dz * shift)
+
+            if not any_collision:
+                break
+
+        # Снова корректируем выход за границы комнаты
+        for obj in objects:
+            if not self._room.is_obj_inside(obj):
+                half_sizes = self._get_object_half_sizes(obj)
+                origin = self._room.get_origin()
+                dims = self._room.get_dimensions()
+                x_min = origin.x - dims.x/2 + half_sizes[0]
+                x_max = origin.x + dims.x/2 - half_sizes[0]
+                y_min = origin.y + half_sizes[1]
+                y_max = origin.y + dims.y - half_sizes[1]
+                z_min = origin.z - dims.z/2 + half_sizes[2]
+                z_max = origin.z + dims.z/2 - half_sizes[2]
+                obj.position = Vector3(
+                    max(x_min, min(obj.position.x, x_max)),
+                    max(y_min, min(obj.position.y, y_max)),
+                    max(z_min, min(obj.position.z, z_max))
+                )
+
+        return changed
 
     def set_ideal_preferences(self, prefs: Dict[int, dict]):
         """Установка идеальных позиций/углов для объектов."""
@@ -209,7 +259,17 @@ class GeneticArranger(BaseArranger):
             best_idx = min(range(len(fitness_values)), key=lambda i: fitness_values[i])
             self._apply_genotype(population[best_idx])
 
-        self._repair_clones(self._objects)
+        for _ in range(10):
+            # Сохраняем текущие позиции
+            old_positions = [Vector3(obj.position.x, obj.position.y, obj.position.z) for obj in self._objects]
+            # Сначала прижимаем к стенам
+            self._repair_clones(self._objects)
+            # Затем разрешаем коллизии
+            self._resolve_collisions(self._objects)
+            # Проверяем, изменилось ли что-то
+            if all((obj.position.x == op.x and obj.position.y == op.y and obj.position.z == op.z)
+                   for obj, op in zip(self._objects, old_positions)):
+                break
 
         return self._get_current_positions()
 
@@ -279,8 +339,9 @@ class GeneticArranger(BaseArranger):
         if clones[0].id == self._objects[0].id:
             raise RuntimeError("Clones share same ID as original!")
 
-        # Принудительно удовлетворяем правилам distance до стен
+        # Принудительно удовлетворяем правилам distance до стен и убираем коллизии
         self._repair_clones(clones)
+        self._resolve_collisions(clones) 
 
         eval_result = self.validator.evaluate_constraints(clones, self._room)
         if eval_result.feasible:
