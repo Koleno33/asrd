@@ -31,6 +31,7 @@ public:
   Vector3 get_normal() const;
   const std::array<Vector3, 4>& get_vertices() const; 
   Vector3 get_center() const;
+  float get_distance() const;
 
   float calc_distance_to_point(const Vector3& point) const;
 };

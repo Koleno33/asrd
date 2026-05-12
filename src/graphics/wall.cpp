@@ -19,6 +19,11 @@ Vector3 Wall::get_center() const
   return Vector3Scale(center, 1.0f / vertices.size());
 }
 
+float Wall::get_distance() const
+{
+  return xyz_distance;
+}
+
 float Wall::calc_distance_to_point(const Vector3& point) const 
 { 
   // Расстояние от точки до плоскости: |Ax + By + Cz + D| / sqrt(A^2 + B^2 + C^2)
