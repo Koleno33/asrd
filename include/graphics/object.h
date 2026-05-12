@@ -18,6 +18,7 @@
 class Cube;
 class Sphere;
 class Wall;
+class UserObject;
 
 class OBJECT_API Object 
 {
@@ -69,8 +70,10 @@ public:
   // Перегруженные методы для конкретных типов
   virtual float calculate_distance_to_cube(const Cube& other) const = 0;
   virtual float calculate_distance_to_sphere(const Sphere& other) const = 0;
+  virtual float calculate_distance_to_userobject(const UserObject& other) const = 0;
   virtual bool check_collision_with_cube(const Cube& other) const = 0;
   virtual bool check_collision_with_sphere(const Sphere& other) const = 0;
+  virtual bool check_collision_with_userobject(const UserObject& other) const = 0;
 
   // Виртуальынй метод получения половины проекции объекта на заданную ось (в общих координатах)
   virtual float get_projection_on_axis(const Vector3& axis) const = 0;
