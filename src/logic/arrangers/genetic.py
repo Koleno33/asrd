@@ -31,9 +31,6 @@ class GeneticArranger(BaseArranger):
                     obj_type, wall_str = parts[0], parts[1]
                     self.wall_dist_rules.setdefault(obj_type, {})[wall_str] = rule.value
 
-        print("WALL DIST RULES")
-        print(self.wall_dist_rules)
-
     def _get_surface_type_from_str(self, s):
         wall_mapping = {
             "FLOOR": SurfaceType.FLOOR,
