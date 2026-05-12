@@ -71,7 +71,8 @@ class ValidationResult:
 
 
 class Validator:
-    NUMBER_TOLERANCE = 0.02
+    NUMBER_TOLERANCE = 0.02  # for `min_distance` rule
+    EPSILON = 1e-5           # for `distance`     rule
 
     def __init__(self, objects: List, room):
         self.__rules = DocumentParser.parse_document("assets/docs/doc.txt")
@@ -192,7 +193,7 @@ class Validator:
 
                 for obj in objs:
                     dist = obj.calculate_distance_to_wall(wall_obj)
-                    if dist == rule.value:
+                    if abs(dist - rule.value) < self.EPSILON:
                         continue
                     else:
                         current_status = ValidationValue.INVALID
