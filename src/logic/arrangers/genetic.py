@@ -2,7 +2,7 @@ import random
 import math
 from typing import List, Dict, Optional
 from objects_module import Vector3, Object, Cube, Sphere, Room
-from validator import Validator, ConstraintEvaluation, DocumentParser
+from validator import Validator, ConstraintEvaluation, DocumentParser, SurfaceType
 from arrangers.base import BaseArranger
 
 
@@ -20,6 +20,106 @@ class GeneticArranger(BaseArranger):
         # Идеальные позиции и углы (пользовательские предпочтения)
         # Формат: { obj.id: {"position": Vector3, "angle": float} }
         self.ideal_prefs: Dict[int, dict] = {}
+
+        # Собираем правила distance для быстрого доступа при repair
+        # Формат: self.wall_dist_rules[obj_type_str][wall_type_str] = required_distance
+        self.wall_dist_rules = {}  # ключ: "cube", "sphere", "any"
+        for rule in self._rules:
+            if rule.name == "distance":
+                parts = rule.object.split(',')
+                if len(parts) == 2 and self._is_wall_str(parts[1]):
+                    obj_type, wall_str = parts[0], parts[1]
+                    self.wall_dist_rules.setdefault(obj_type, {})[wall_str] = rule.value
+
+        print("WALL DIST RULES")
+        print(self.wall_dist_rules)
+
+    def _get_surface_type_from_str(self, s):
+        wall_mapping = {
+            "FLOOR": SurfaceType.FLOOR,
+            "CEILING": SurfaceType.CEILING,
+            "WALL_FRONT": SurfaceType.WALL_FRONT,
+            "WALL_BACK": SurfaceType.WALL_BACK,
+            "WALL_LEFT": SurfaceType.WALL_LEFT,
+            "WALL_RIGHT": SurfaceType.WALL_RIGHT
+        }
+        return wall_mapping.get(s)
+
+    def _is_wall_str(self, s):
+        return s in ["FLOOR", "CEILING", "WALL_FRONT", "WALL_BACK", "WALL_LEFT", "WALL_RIGHT"]
+
+    def _get_object_half_sizes(self, obj):
+        """Возвращает половинные размеры объекта (x, y, z) для ограничения его центра внутри комнаты."""
+        if obj.get_type() == "Cube":
+            # У куба есть свойство size (Vector3)
+            sz = obj.size
+            return (sz.x / 2.0, sz.y / 2.0, sz.z / 2.0)
+        elif obj.get_type() == "Sphere":
+            r = obj.radius
+            return (r, r, r)
+        else:
+            # Для неизвестных типов — нулевые половинные размеры
+            return (0.0, 0.0, 0.0)
+
+    def _repair_clones(self, clones):
+        """Принудительно выставляет точные расстояния до стен (использует wall.distance)."""
+        origin = self._room.get_origin()
+        dims   = self._room.get_dimensions()
+        walls  = {w.get_type(): w for w in self._walls}
+
+        for obj in clones:
+            if obj.locked:
+                continue
+
+            obj_type = obj.get_type().lower()
+            applicable_rules = {}
+            if "any" in self.wall_dist_rules:
+                applicable_rules.update(self.wall_dist_rules["any"])
+            if obj_type in self.wall_dist_rules:
+                applicable_rules.update(self.wall_dist_rules[obj_type])
+
+            for wall_str, req_dist in applicable_rules.items():
+                wall_type = self._get_surface_type_from_str(wall_str)
+                wall = walls.get(wall_type)
+                if wall is None:
+                    continue
+
+                normal = wall.get_normal()
+                # Знаковое расстояние от центра до плоскости:
+                #   signed_dist = dot(pos, normal) - wall.distance
+                signed_center_dist = (normal.x * obj.position.x +
+                                      normal.y * obj.position.y +
+                                      normal.z * obj.position.z) - wall.distance
+
+                half = obj.get_projection_on_axis(normal)
+                # требуемое знаковое расстояние от центра
+                target_signed = half + req_dist
+
+                delta = target_signed - signed_center_dist
+                obj.position = Vector3(
+                    obj.position.x + normal.x * delta,
+                    obj.position.y + normal.y * delta,
+                    obj.position.z + normal.z * delta
+                )
+
+                # отладка
+                if obj.id == self._objects[0].id:  # для первого объекта
+                    print(f"Repair {obj.get_type()}{obj.id}: before {obj.position}, rule {wall_str}={req_dist}, half={half}, signed_center={signed_center_dist}, target={target_signed}, delta={delta}")
+
+            # Проверка, остался ли объект внутри комнаты
+            if not self._room.is_obj_inside(obj):
+                half_sizes = self._get_object_half_sizes(obj)
+                x_min = origin.x - dims.x/2 + half_sizes[0]
+                x_max = origin.x + dims.x/2 - half_sizes[0]
+                y_min = origin.y + half_sizes[1]
+                y_max = origin.y + dims.y - half_sizes[1]
+                z_min = origin.z - dims.z/2 + half_sizes[2]
+                z_max = origin.z + dims.z/2 - half_sizes[2]
+                obj.position = Vector3(
+                    max(x_min, min(obj.position.x, x_max)),
+                    max(y_min, min(obj.position.y, y_max)),
+                    max(z_min, min(obj.position.z, z_max))
+                )
 
     def set_ideal_preferences(self, prefs: Dict[int, dict]):
         """Установка идеальных позиций/углов для объектов."""
@@ -112,6 +212,8 @@ class GeneticArranger(BaseArranger):
             best_idx = min(range(len(fitness_values)), key=lambda i: fitness_values[i])
             self._apply_genotype(population[best_idx])
 
+        self._repair_clones(self._objects)
+
         return self._get_current_positions()
 
     def _create_random_individual(self) -> List[float]:
@@ -174,15 +276,19 @@ class GeneticArranger(BaseArranger):
         Допустимые особи получают значение objective_function (0 пока),
         недопустимые — большое число + штраф из evaluate_constraints.
         """
-        objects_list = self._decode_genotype(genotype)
+        clones = self._decode_genotype(genotype)
 
-        # Проверяем ограничения
-        eval_result: ConstraintEvaluation = self.validator.evaluate_constraints(objects_list, self._room)
+        # Проверка, что это именно клоны, а не оригиналы
+        if clones[0].id == self._objects[0].id:
+            raise RuntimeError("Clones share same ID as original!")
 
+        # Принудительно удовлетворяем правилам distance до стен
+        self._repair_clones(clones)
+
+        eval_result = self.validator.evaluate_constraints(clones, self._room)
         if eval_result.feasible:
-            return self._objective_function(objects_list)
+            return self._objective_function(clones)
         else:
-            # Штраф за нарушения: большое базовое число + суммарное нарушение
             return 1e6 + eval_result.total_violation
 
     def _objective_function(self, objects_list: List[Object]) -> float:

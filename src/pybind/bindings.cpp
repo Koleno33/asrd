@@ -130,6 +130,8 @@ PYBIND11_MODULE(objects_module, handle)
   py::class_<Wall, std::shared_ptr<Wall>>(handle, "Wall")
       .def(py::init<SurfaceType, const Vector3&, float, const std::array<Vector3, 4>&>(),
            py::arg("type"), py::arg("normal"), py::arg("distance"), py::arg("vertices"))
+      .def_property_readonly("distance", &Wall::get_distance,
+           "Signed distance from origin to the wall plane")
       .def("get_type", &Wall::get_type)
       .def("get_normal", &Wall::get_normal)
       .def("get_vertices", &Wall::get_vertices)
