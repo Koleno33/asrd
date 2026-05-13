@@ -2,6 +2,7 @@
 #include <graphics/cube.h>
 #include <graphics/sphere.h>
 #include <graphics/wall.h>
+#include <iostream>
 #include <cmath>
 #include <cfloat>
 #include <raymath.h>
@@ -34,7 +35,7 @@ const char* UserObject::get_type() const
 
 void UserObject::draw() const 
 {
-  if (model_loaded) {
+  if (model_loaded && model.meshCount > 0) {
       // Рисуем модель с позицией, поворотом вокруг Y и масштабом.
       // Цвет из свойства color выступает как оттеночный (tint).
       // Если нужно сохранить исходные цвета модели, tint можно передавать WHITE,
@@ -61,14 +62,23 @@ void UserObject::update_half_extents()
 
 bool UserObject::load_from_file(const std::string& path) 
 {
-  // Загружаем модель из файла
+  std::cout << "  [trace] Loading model..." << std::endl;
   Model m = LoadModel(path.c_str());
+  std::cout << "  [trace] LoadModel done. meshCount = " << m.meshCount << std::endl;
+
   if (m.meshCount == 0) {
-      // Можно вывести ошибку, но для простоты возвращаем false
-      return false;
+    return false;
   }
 
-  // Если уже была загружена модель – выгружаем старую
+  // Проверка валидности мешей
+  for (int i = 0; i < m.meshCount; i++) {
+    if (m.meshes[i].vertexCount == 0) {
+      std::cerr << "  [error] Empty mesh at index " << i << std::endl;
+      UnloadModel(m);
+      return false;
+    }
+  }
+
   if (model_loaded) {
       UnloadModel(model);
   }
@@ -76,10 +86,9 @@ bool UserObject::load_from_file(const std::string& path)
   model = m;
   model_loaded = true;
 
-  // Получаем локальный AABB (без учёта масштаба и вращения)
+  std::cout << "  [trace] Getting AABB..." << std::endl;
   local_bounds = GetModelBoundingBox(model);
-
-  // Пересчитываем half_extents
+  std::cout << "  [trace] Updating half extents..." << std::endl;
   update_half_extents();
   return true;
 }
@@ -87,9 +96,11 @@ bool UserObject::load_from_file(const std::string& path)
 void UserObject::unload() 
 {
   if (model_loaded) {
+    if (model.meshes != nullptr && model.meshCount > 0) {
       UnloadModel(model);
-      model = { 0 };
-      model_loaded = false;
+    }
+    model = { 0 };
+    model_loaded = false;
   }
   // Габариты после выгрузки смысла не имеют, обнуляем
   half_extents = { 0.0f, 0.0f, 0.0f };
