@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cfloat>
 #include <raymath.h>
+#include <rlgl.h>
 
 UserObject::UserObject(const Vector3& pos, const Vector3& scale,
                      const std::string& internalName,
@@ -93,17 +94,27 @@ bool UserObject::load_from_file(const std::string& path)
   return true;
 }
 
-void UserObject::unload() 
-{
-  if (model_loaded) {
-    if (model.meshes != nullptr && model.meshCount > 0) {
-      UnloadModel(model);
-    }
-    model = { 0 };
-    model_loaded = false;
+void UserObject::unload() {
+  if (!model_loaded) return;
+
+  // Освобождаем только CPU-память (вершины, текстурные координаты и т.д.)
+  // VAO/VBO не трогаем, чтобы избежать segfault из-за невалидных идентификаторов.
+  for (int i = 0; i < model.meshCount; i++) {
+    Mesh* mesh = &model.meshes[i];
+    if (mesh->vertices != nullptr)  { RL_FREE(mesh->vertices);  mesh->vertices  = nullptr; }
+    if (mesh->texcoords != nullptr) { RL_FREE(mesh->texcoords); mesh->texcoords = nullptr; }
+    if (mesh->normals != nullptr)   { RL_FREE(mesh->normals);   mesh->normals   = nullptr; }
+    if (mesh->colors != nullptr)    { RL_FREE(mesh->colors);    mesh->colors    = nullptr; }
+    if (mesh->indices != nullptr)   { RL_FREE(mesh->indices);   mesh->indices   = nullptr; }
+    // Если есть другие динамические поля (tangents, texcoords2), их тоже RL_FREE.
   }
-  // Габариты после выгрузки смысла не имеют, обнуляем
-  half_extents = { 0.0f, 0.0f, 0.0f };
+
+  // Материалы и текстуры – оставляем как есть, они освободятся при закрытии программы.
+
+  // Обнуляем модель
+  model = { 0 };
+  model_loaded = false;
+  half_extents = { 0, 0, 0 };
 }
 
 void UserObject::set_scale(const Vector3& new_scale) 
