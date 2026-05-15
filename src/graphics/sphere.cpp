@@ -1,5 +1,6 @@
 #include <graphics/sphere.h>
 #include <graphics/cube.h>
+#include <graphics/userobject.h>
 #include <graphics/wall.h>
 #include <cmath>
 #include <raymath.h>
@@ -79,4 +80,14 @@ std::shared_ptr<Object> Sphere::clone() const
     newSphere->set_angle(angle_y);
     if (locked) newSphere->set_locked(true);
     return newSphere;
+}
+
+float Sphere::calculate_distance_to_userobject(const UserObject& other) const 
+{
+  return other.calculate_distance_to_sphere(*this);
+}
+
+bool Sphere::check_collision_with_userobject(const UserObject& other) const 
+{
+  return other.check_collision_with_sphere(*this);
 }

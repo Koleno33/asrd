@@ -1,6 +1,7 @@
 #include <logic/objvalidator.h>
 #include <graphics/cube.h>
 #include <graphics/sphere.h>
+#include <graphics/userobject.h>
 #include <graphics/room.h>
 #include <memory>
 #include <iostream>
@@ -89,6 +90,18 @@ int main(void)
   objects.push_back(cube3);
   objects.push_back(sphere1);
   objects.push_back(sphere2);
+
+  // === Временный пример UserObject ===
+  auto table = std::make_shared<UserObject>(
+      (Vector3){ 4.0f, 0.0f, 0.0f },   // позиция
+      (Vector3){ 3.0f, 3.0f, 3.0f },   // масштаб
+      "table",                         // внутреннее имя для правил
+      "стол"                           // отображаемое имя
+  );
+  std::cout << "Загрузка UserObject..." << std::endl;
+  bool ok = table->load_from_file("assets/models/table/little table.obj");
+  objects.push_back(table);
+  std::cout << "Загрузка завершена: " << ok << std::endl;
 
   auto room = std::make_shared<Room>(
     (Vector3){ 0.0f, 0.0f, 0.0f },       // origin
