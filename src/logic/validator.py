@@ -127,15 +127,16 @@ class Validator:
 
         return [vr.to_dict() for vr in result]
     
-    def get_objects(self, type: str):
-        match type:
-            case "any":
+    def get_objects(self, type_str: str):
+        """Возвращает список объектов по типу или internal_name."""
+        # Известные типы (включая userobject)
+        if type_str in ("any", "cube", "sphere", "userobject"):
+            if type_str == "any":
                 return self.__objects
-            case "cube":
-                return [ o for o in self.__objects if o.get_type() == "Cube" ]
-            case "sphere":
-                return [ o for o in self.__objects if o.get_type() == "Sphere" ]
-        return list()
+            return [o for o in self.__objects if o.get_type().lower() == type_str]
+        # Если не тип – ищем по internal_name (есть только у UserObject)
+        return [o for o in self.__objects 
+                if hasattr(o, 'internal_name') and o.internal_name == type_str]
 
     def validate_rule(self, rule):
         def is_wall(s):
