@@ -98,10 +98,19 @@ int main(void)
       "table",                         // внутреннее имя для правил
       "стол"                           // отображаемое имя
   );
-  std::cout << "Загрузка UserObject..." << std::endl;
-  bool ok = table->load_from_file("assets/models/table/little table.obj");
-  std::cout << "Загрузка завершена: " << ok << std::endl;
+  std::cout << "Loading UserObject..." << std::endl;
   objects.push_back(table);
+  if (table->load_from_file("assets/models/table/little table.obj")) {
+    // Поднимаем объект так, чтобы низ бокса касался пола (y=0)
+    float halfY = table->get_half_extents().y;
+    Vector3 pos = table->get_position();
+    pos.y = halfY;   // нижняя грань на уровне 0
+    table->set_position(pos);
+    objects.push_back(table);
+    std::cout << "Loaded successful." << std::endl;
+  } else {
+    std::cout << "Error loading UserObject!!!" << std::endl;
+  }
 
   auto room = std::make_shared<Room>(
     (Vector3){ 0.0f, 0.0f, 0.0f },       // origin
