@@ -19,7 +19,8 @@ UserObject::UserObject(const Vector3& pos, const Vector3& scale,
     model_loaded(false),
     scale(scale),
     local_bounds{ {0,0,0}, {0,0,0} },
-    half_extents{0,0,0}
+    half_extents{0,0,0},
+    local_center_offset{0,0,0}
 {
   set_color(color);
 }
@@ -133,6 +134,12 @@ Vector3 UserObject::get_scale() const
 Vector3 UserObject::get_half_extents() const 
 { 
   return half_extents; 
+}
+
+
+Vector3 UserObject::get_local_center_offset() const
+{
+  return local_center_offset;
 }
 
 const std::string& UserObject::get_internal_name() const 

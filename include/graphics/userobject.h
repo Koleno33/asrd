@@ -11,9 +11,10 @@ private:
     bool   model_loaded = false;    // признак загруженной модели
 
     // ---------- геометрические параметры ----------
-    Vector3      scale;             // масштаб по осям (может быть неравномерным)
-    BoundingBox  local_bounds;      // локальный AABB модели (не масштабированный)
-    Vector3      half_extents;      // половины габаритов ориентированного бокса (с учётом scale)
+    Vector3      scale;                // масштаб по осям (может быть неравномерным)
+    BoundingBox  local_bounds;         // локальный AABB модели (не масштабированный)
+    Vector3      half_extents;         // половины габаритов ориентированного бокса (с учётом scale)
+    Vector3      local_center_offset;  // смещение от (0,0,0) модели до центра её AABB
 
     // ---------- служебные методы ----------
     void update_half_extents();   // пересчёт half_extents из local_bounds * scale / 2
@@ -46,6 +47,8 @@ public:
     BoundingBox  get_bounds() const;                     // возвращает world-space AABB (или локальный)
     Vector3      get_scale() const;
     Vector3      get_half_extents() const;
+    Vector3      get_local_center_offset() const;
+
     void         set_scale(const Vector3& new_scale);
 
     const std::string& get_internal_name() const;
