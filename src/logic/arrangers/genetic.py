@@ -46,16 +46,17 @@ class GeneticArranger(BaseArranger):
         return s in ["FLOOR", "CEILING", "WALL_FRONT", "WALL_BACK", "WALL_LEFT", "WALL_RIGHT"]
 
     def _get_object_half_sizes(self, obj):
-        """Возвращает половинные размеры объекта (x, y, z) для ограничения его центра внутри комнаты."""
         if obj.get_type() == "Cube":
-            # У куба есть свойство size (Vector3)
             sz = obj.size
             return (sz.x / 2.0, sz.y / 2.0, sz.z / 2.0)
         elif obj.get_type() == "Sphere":
             r = obj.radius
             return (r, r, r)
+        elif obj.get_type() == "UserObject":
+            # Используем свойство half_extents
+            he = obj.half_extents
+            return (he.x, he.y, he.z)
         else:
-            # Для неизвестных типов — нулевые половинные размеры
             return (0.0, 0.0, 0.0)
 
     def _repair_clones(self, clones):
@@ -74,6 +75,9 @@ class GeneticArranger(BaseArranger):
                 applicable_rules.update(self.wall_dist_rules["any"])
             if obj_type in self.wall_dist_rules:
                 applicable_rules.update(self.wall_dist_rules[obj_type])
+            if hasattr(obj, 'internal_name') and obj.internal_name:
+                if obj.internal_name in self.wall_dist_rules:
+                    applicable_rules.update(self.wall_dist_rules[obj.internal_name])
 
             for wall_str, req_dist in applicable_rules.items():
                 wall_type = self._get_surface_type_from_str(wall_str)

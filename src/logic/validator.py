@@ -93,15 +93,15 @@ class Validator:
 
 
     def _get_objects_by_type_from_list(self, obj_list, type_str):
-        """Фильтрует список объектов по строке типа (как в get_objects)."""
-        if type_str == "any":
-            return obj_list
-        elif type_str == "cube":
-            return [o for o in obj_list if o.get_type() == "Cube"]
-        elif type_str == "sphere":
-            return [o for o in obj_list if o.get_type() == "Sphere"]
-        else:
-            return []
+        """Фильтрует список объектов по строке типа или UserObject.internal_name"""
+        # Известные типы (включая UserObject)
+        if type_str in ("any", "cube", "sphere", "userobject"):
+            if type_str == "any":
+                return obj_list
+            return [o for o in obj_list if o.get_type().lower() == type_str]
+        # Если не совпало – ищем по internal_name
+        return [o for o in obj_list 
+                if hasattr(o, 'internal_name') and o.internal_name == type_str]
 
     
     def validate(self):
