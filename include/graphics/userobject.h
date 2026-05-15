@@ -45,6 +45,7 @@ public:
     // ---------- доступ к параметрам ----------
     BoundingBox  get_bounds() const;                     // возвращает world-space AABB (или локальный)
     Vector3      get_scale() const;
+    Vector3      get_half_extents() const;
     void         set_scale(const Vector3& new_scale);
 
     const std::string& get_internal_name() const;

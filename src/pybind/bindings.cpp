@@ -137,6 +137,7 @@ PYBIND11_MODULE(objects_module, handle)
       .def_property("scale", &UserObject::get_scale, &UserObject::set_scale)
       .def_property("internal_name", &UserObject::get_internal_name, &UserObject::set_internal_name)
       .def_property("display_name", &UserObject::get_display_name, &UserObject::set_display_name)
+      .def_property_readonly("half_extents", &UserObject::get_half_extents)
       .def("load_from_file", &UserObject::load_from_file, py::arg("path"),
            "Load OBJ model from file")
       .def("unload", &UserObject::unload, "Unload model data")

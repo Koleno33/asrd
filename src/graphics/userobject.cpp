@@ -130,6 +130,11 @@ Vector3 UserObject::get_scale() const
   return scale;
 }
 
+Vector3 UserObject::get_half_extents() const 
+{ 
+  return half_extents; 
+}
+
 const std::string& UserObject::get_internal_name() const 
 {
   return internal_name;
