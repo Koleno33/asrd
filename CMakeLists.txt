@@ -47,6 +47,7 @@ pybind11_add_module(objects_module
   ${SRC_DIR}/graphics/cube.cpp
   ${SRC_DIR}/graphics/sphere.cpp
   ${SRC_DIR}/graphics/object.cpp
+  ${SRC_DIR}/graphics/userobject.cpp
   ${SRC_DIR}/graphics/wall.cpp
   ${SRC_DIR}/graphics/room.cpp
 )

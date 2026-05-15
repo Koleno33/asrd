@@ -1,5 +1,6 @@
 #include <graphics/cube.h>
 #include <graphics/sphere.h>
+#include <graphics/userobject.h>
 #include <graphics/room.h>
 #include <graphics/wall.h>
 #include <pybind11/pybind11.h>
@@ -77,6 +78,11 @@ PYBIND11_MODULE(objects_module, handle)
     .def("check_collision", &Cube::check_collision)
     .def("calculate_distance_to_wall", &Cube::calculate_distance_to_wall)
     .def("get_projection_on_axis", &Cube::get_projection_on_axis)
+    // For UserObject
+    .def("calculate_distance_to_userobject", &Cube::calculate_distance_to_userobject,
+         py::arg("other"), "Distance to a UserObject")
+    .def("check_collision_with_userobject", &Cube::check_collision_with_userobject,
+         py::arg("other"), "Collision with a UserObject")
     .def("clone", &Cube::clone)
     
     // String representation
@@ -105,6 +111,11 @@ PYBIND11_MODULE(objects_module, handle)
     .def("check_collision", &Sphere::check_collision)
     .def("calculate_distance_to_wall", &Sphere::calculate_distance_to_wall)
     .def("get_projection_on_axis", &Sphere::get_projection_on_axis)
+    // For UserObject
+    .def("calculate_distance_to_userobject", &Sphere::calculate_distance_to_userobject,
+         py::arg("other"))
+    .def("check_collision_with_userobject", &Sphere::check_collision_with_userobject,
+         py::arg("other"))
     .def("clone", &Sphere::clone)
     
     // String representation
@@ -115,6 +126,31 @@ PYBIND11_MODULE(objects_module, handle)
                               std::to_string(pos.z) + 
                      "), radius=" + std::to_string(s.get_radius()) + ")";
   });
+
+  // UserObject class
+  py::class_<UserObject, Object, std::shared_ptr<UserObject>>(handle, "UserObject")
+      .def(py::init<const Vector3&, const Vector3&, const std::string&, const std::string&, Color>(),
+           py::arg("pos"), py::arg("scale"),
+           py::arg("internal_name") = "", py::arg("display_name") = "",
+           py::arg("color") = WHITE,
+           "Create a custom user object from an OBJ model")
+      .def_property("scale", &UserObject::get_scale, &UserObject::set_scale)
+      .def_property("internal_name", &UserObject::get_internal_name, &UserObject::set_internal_name)
+      .def_property("display_name", &UserObject::get_display_name, &UserObject::set_display_name)
+      .def("load_from_file", &UserObject::load_from_file, py::arg("path"),
+           "Load OBJ model from file")
+      .def("unload", &UserObject::unload, "Unload model data")
+      .def("get_bounds", &UserObject::get_bounds, "Return world-space AABB (for debug)")
+      .def("clone", &UserObject::clone, "Clone without model data")
+      .def("calculate_distance", &UserObject::calculate_distance)
+      .def("calculate_distance_to_wall", &UserObject::calculate_distance_to_wall)
+      .def("check_collision", &UserObject::check_collision)
+      .def("get_projection_on_axis", &UserObject::get_projection_on_axis)
+      .def("__repr__", [](const UserObject& u) {
+          auto pos = u.get_position();
+          return "UserObject(internal='" + u.get_internal_name() +
+                 "', pos=(" + std::to_string(pos.x) + "," + std::to_string(pos.y) + "," + std::to_string(pos.z) + "))";
+      });
 
   // SurfaceType enum
   py::enum_<SurfaceType>(handle, "SurfaceType")
