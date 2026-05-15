@@ -97,9 +97,10 @@ class GeneticArranger(BaseArranger):
                 normal = wall.get_normal()
                 # Знаковое расстояние от центра до плоскости:
                 #   signed_dist = dot(pos, normal) - wall.distance
-                signed_center_dist = (normal.x * obj.position.x +
-                                      normal.y * obj.position.y +
-                                      normal.z * obj.position.z) - wall.distance
+                center = obj.get_center()
+                signed_center_dist = (normal.x * center.x +
+                                      normal.y * center.y +
+                                      normal.z * center.z) - wall.distance
 
                 half = obj.get_projection_on_axis(normal)
                 # требуемое знаковое расстояние от центра
