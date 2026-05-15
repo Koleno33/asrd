@@ -187,6 +187,7 @@ class Validator:
                         wall = self._get_surface_type_from_str(typee)
                         continue
                     objs = self.get_objects(typee)
+                    print(f"DEBUG: Found {len(objs)} objects for type/name '{typee}'")
 
                 if wall is None:
                     print(f"ERROR: No wall type found in rule: {rule.object}")
