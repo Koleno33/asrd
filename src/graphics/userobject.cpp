@@ -38,16 +38,12 @@ const char* UserObject::get_type() const
 void UserObject::draw() const 
 {
   if (model_loaded && model.meshCount > 0) {
-      // Рисуем модель с позицией, поворотом вокруг Y и масштабом.
-      // Цвет из свойства color выступает как оттеночный (tint).
-      // Если нужно сохранить исходные цвета модели, tint можно передавать WHITE,
-      // но здесь используется заданный пользователем цвет.
-      DrawModelEx(model,
-                  position,
-                  { 0.0f, 1.0f, 0.0f },   // ось вращения
-                  angle_y,
-                  scale,
-                  color);
+    // Рисуем модель с позицией, поворотом вокруг Y и масштабом.
+    // Цвет из свойства color выступает как оттеночный (tint).
+    // Если нужно сохранить исходные цвета модели, tint можно передавать WHITE,
+    // но здесь используется заданный пользователем цвет.
+    Vector3 drawPos = Vector3Subtract(position, local_center_offset);
+    DrawModelEx(model, drawPos, { 0.0f, 1.0f, 0.0f }, angle_y, scale, color);
   }
 }
 
