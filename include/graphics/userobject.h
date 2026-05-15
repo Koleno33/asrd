@@ -48,6 +48,7 @@ public:
     Vector3      get_scale() const;
     Vector3      get_half_extents() const;
     Vector3      get_local_center_offset() const;
+    Vector3      get_center() const override;
 
     void         set_scale(const Vector3& new_scale);
 

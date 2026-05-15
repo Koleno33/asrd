@@ -41,11 +41,13 @@ public:
   Object& operator=(const Object&) = delete;
 
   // Методы доступа
-  uint64_t get_id() const;
-  Vector3  get_position() const;
-  Color    get_color() const;
-  float    get_angle() const;
-  bool     is_locked() const;
+  uint64_t         get_id() const;
+  Vector3          get_position() const;
+  Color            get_color() const;
+  float            get_angle() const;
+  bool             is_locked() const;
+
+  virtual Vector3  get_center() const;
 
   // Сеттеры
   void set_position(const Vector3& new_pos);

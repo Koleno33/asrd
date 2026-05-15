@@ -158,6 +158,11 @@ const std::string& UserObject::get_internal_name() const
   return internal_name;
 }
 
+Vector3 UserObject::get_center() const 
+{
+  return Vector3Add(position, local_center_offset);
+}
+
 void UserObject::set_internal_name(const std::string& name) 
 {
   internal_name = name;

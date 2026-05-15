@@ -28,6 +28,11 @@ float Object::get_angle() const
   return angle_y;
 }
 
+Vector3 Object::get_center() const
+{
+    return position;
+}
+
 void Object::set_position(const Vector3& newpos) 
 {
   position = newpos;
