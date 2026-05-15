@@ -99,7 +99,6 @@ int main(void)
       "стол"                           // отображаемое имя
   );
   std::cout << "Loading UserObject..." << std::endl;
-  objects.push_back(table);
   if (table->load_from_file("assets/models/table/little table.obj")) {
     // Поднимаем объект так, чтобы низ бокса касался пола (y=0)
     float halfY = table->get_half_extents().y;
