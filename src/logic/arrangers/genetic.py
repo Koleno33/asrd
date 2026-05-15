@@ -31,6 +31,22 @@ class GeneticArranger(BaseArranger):
                     obj_type, wall_str = parts[0], parts[1]
                     self.wall_dist_rules.setdefault(obj_type, {})[wall_str] = rule.value
 
+    def _get_applicable_wall_rules(self, obj):
+        """Возвращает словарь {wall_str: required_distance} для конкретного объекта."""
+        applicable = {}
+        # Правила для всех объектов
+        if 'any' in self.wall_dist_rules:
+            applicable.update(self.wall_dist_rules['any'])
+        # Правила для типа объекта
+        obj_type = obj.get_type().lower()
+        if obj_type in self.wall_dist_rules:
+            applicable.update(self.wall_dist_rules[obj_type])
+        # Правила по internal_name (если есть)
+        if hasattr(obj, 'internal_name') and obj.internal_name:
+            if obj.internal_name in self.wall_dist_rules:
+                applicable.update(self.wall_dist_rules[obj.internal_name])
+        return applicable
+
     def _get_surface_type_from_str(self, s):
         wall_mapping = {
             "FLOOR": SurfaceType.FLOOR,
@@ -70,14 +86,7 @@ class GeneticArranger(BaseArranger):
                 continue
 
             obj_type = obj.get_type().lower()
-            applicable_rules = {}
-            if "any" in self.wall_dist_rules:
-                applicable_rules.update(self.wall_dist_rules["any"])
-            if obj_type in self.wall_dist_rules:
-                applicable_rules.update(self.wall_dist_rules[obj_type])
-            if hasattr(obj, 'internal_name') and obj.internal_name:
-                if obj.internal_name in self.wall_dist_rules:
-                    applicable_rules.update(self.wall_dist_rules[obj.internal_name])
+            applicable_rules = self._get_applicable_wall_rules(obj)
 
             for wall_str, req_dist in applicable_rules.items():
                 wall_type = self._get_surface_type_from_str(wall_str)
