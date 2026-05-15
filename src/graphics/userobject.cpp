@@ -91,7 +91,18 @@ bool UserObject::load_from_file(const std::string& path)
   std::cout << "  [trace] Getting AABB..." << std::endl;
   local_bounds = GetModelBoundingBox(model);
   std::cout << "  [trace] Updating half extents..." << std::endl;
-  update_half_extents();
+
+  local_bounds = GetModelBoundingBox(model);
+
+  // Вычисляем смещение центра AABB от локального начала координат
+  local_center_offset = {
+      (local_bounds.min.x + local_bounds.max.x) * 0.5f,
+      (local_bounds.min.y + local_bounds.max.y) * 0.5f,
+      (local_bounds.min.z + local_bounds.max.z) * 0.5f
+  };
+
+  update_half_extents();   // half_extents уже считаются как (max-min)*0.5*scale
+                           
   return true;
 }
 
