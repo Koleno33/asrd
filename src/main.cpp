@@ -100,11 +100,8 @@ int main(void)
   );
   std::cout << "Loading UserObject..." << std::endl;
   if (table->load_from_file("assets/models/table/little table.obj")) {
-    // Поднимаем объект так, чтобы низ бокса касался пола (y=0)
-    float halfY = table->get_half_extents().y;
-    Vector3 pos = table->get_position();
-    pos.y = halfY;   // нижняя грань на уровне 0
-    table->set_position(pos);
+    Vector3 he = table->get_half_extents();
+    table->set_position((Vector3){ 4.0f, he.y, 0.0f });
     objects.push_back(table);
     std::cout << "Loaded successful." << std::endl;
   } else {

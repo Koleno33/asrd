@@ -42,7 +42,8 @@ void UserObject::draw() const
     // Цвет из свойства color выступает как оттеночный (tint).
     // Если нужно сохранить исходные цвета модели, tint можно передавать WHITE,
     // но здесь используется заданный пользователем цвет.
-    Vector3 drawPos = Vector3Subtract(position, local_center_offset);
+    //Vector3 drawPos = Vector3Subtract(position, local_center_offset);
+    Vector3 drawPos = Vector3Subtract(position, Vector3Multiply(local_center_offset, scale));
     DrawModelEx(model, drawPos, { 0.0f, 1.0f, 0.0f }, angle_y, scale, color);
   }
 }
@@ -88,13 +89,11 @@ bool UserObject::load_from_file(const std::string& path)
   local_bounds = GetModelBoundingBox(model);
   std::cout << "  [trace] Updating half extents..." << std::endl;
 
-  local_bounds = GetModelBoundingBox(model);
-
   // Вычисляем смещение центра AABB от локального начала координат
   local_center_offset = {
-      (local_bounds.min.x + local_bounds.max.x) * 0.5f,
-      (local_bounds.min.y + local_bounds.max.y) * 0.5f,
-      (local_bounds.min.z + local_bounds.max.z) * 0.5f
+    (local_bounds.min.x + local_bounds.max.x) * 0.5f,
+    (local_bounds.min.y + local_bounds.max.y) * 0.5f,
+    (local_bounds.min.z + local_bounds.max.z) * 0.5f
   };
 
   update_half_extents();   // half_extents уже считаются как (max-min)*0.5*scale
@@ -156,7 +155,7 @@ const std::string& UserObject::get_internal_name() const
 
 Vector3 UserObject::get_center() const 
 {
-  return Vector3Add(position, local_center_offset);
+  return position;
 }
 
 void UserObject::set_internal_name(const std::string& name) 
@@ -176,7 +175,6 @@ void UserObject::set_display_name(const std::string& name)
 
 BoundingBox UserObject::get_bounds() const 
 {
-  Vector3 center = Vector3Add(position, local_center_offset);
   // Возвращаем мировой AABB, который охватывает OBB.
   // Вычисляем 8 углов OBB и берём min/max по каждой координате.
   Vector3 corners[8];
@@ -199,7 +197,7 @@ BoundingBox UserObject::get_bounds() const
 
   for (int i = 0; i < 8; i++) {
     Vector3 rot = Vector3RotateByAxisAngle(local_corners[i], {0,1,0}, rad);
-    Vector3 world = Vector3Add(center, rot);
+    Vector3 world = Vector3Add(position, rot);
     world_min = Vector3Min(world_min, world);
     world_max = Vector3Max(world_max, world);
   }
@@ -211,39 +209,34 @@ BoundingBox UserObject::get_bounds() const
 
 float UserObject::calculate_distance_to_wall(const Wall& wall) const 
 {
-  Vector3 center = Vector3Add(position, local_center_offset);
-  Vector3 wall_normal = wall.get_normal();
-  float angle_rad = angle_y * DEG2RAD;
-  Vector3 local_normal = Vector3RotateByAxisAngle(wall_normal, {0.0f, 1.0f, 0.0f}, -angle_rad);
-
-  float half_proj = fabsf(local_normal.x) * half_extents.x +
-                    fabsf(local_normal.y) * half_extents.y +
-                    fabsf(local_normal.z) * half_extents.z;
-
-  float center_distance = wall.calc_distance_to_point(center);
-  return center_distance - half_proj;
+    Vector3 wall_normal = wall.get_normal();
+    float angle_rad = angle_y * DEG2RAD;
+    Vector3 local_normal = Vector3RotateByAxisAngle(wall_normal, {0,1,0}, -angle_rad);
+    float half_proj = fabsf(local_normal.x) * half_extents.x +
+                      fabsf(local_normal.y) * half_extents.y +
+                      fabsf(local_normal.z) * half_extents.z;
+    float center_distance = wall.calc_distance_to_point(position); 
+    return center_distance - half_proj;
 }
 
 float UserObject::calculate_distance_to_cube(const Cube& other) const 
 {
-  Vector3 center = Vector3Add(position, local_center_offset);
-  Vector3 other_center = other.get_position();
-
   float a1 = angle_y * DEG2RAD;
   float a2 = other.get_angle() * DEG2RAD;
 
-  Vector3 h1 = half_extents;  // already half
+  Vector3 h1 = half_extents;  
   Vector3 h2 = { other.get_size().x * 0.5f,
                  other.get_size().y * 0.5f,
                  other.get_size().z * 0.5f };
 
   // Vertical distance
-  float dy = fabsf(center.y - other_center.y) - (half_extents.y + other.get_size().y * 0.5f);
+  float dy = fabsf(position.y - other.get_position().y) - (h1.y + h2.y);
   float dist_y = fmaxf(0.0f, dy);
 
+  Vector3 other_position = other.get_position();
   // 2D distance in XZ plane (OBB vs OBB)
-  Vector2 c1 = { center.x, center.z };
-  Vector2 c2 = { other_center.x, other_center.z };
+  Vector2 c1 = { position.x, position.z };
+  Vector2 c2 = { other_position.x, other_position.z };
   Vector2 e1 = { h1.x, h1.z };
   Vector2 e2 = { h2.x, h2.z };
 
@@ -276,8 +269,7 @@ float UserObject::calculate_distance_to_cube(const Cube& other) const
 
 float UserObject::calculate_distance_to_sphere(const Sphere& other) const 
 {
-  Vector3 center = Vector3Add(position, local_center_offset);
-  Vector3 diff = Vector3Subtract(other.get_position(), center);
+  Vector3 diff = Vector3Subtract(other.get_position(), position);
   float angle_rad = angle_y * DEG2RAD;
   Vector3 local_diff = Vector3RotateByAxisAngle(diff, {0.0f, 1.0f, 0.0f}, -angle_rad);
 
@@ -351,8 +343,7 @@ bool UserObject::check_collision(const Object& other) const
 
 bool UserObject::check_collision_with_cube(const Cube& other) const 
 {
-  Vector3 center = Vector3Add(position, local_center_offset);
-  float dy = fabsf(center.y - other.get_position().y);
+  float dy = fabsf(position.y - other.get_position().y);
   if (dy >= (half_extents.y + other.get_size().y * 0.5f)) {
     return false;
   }
@@ -360,7 +351,7 @@ bool UserObject::check_collision_with_cube(const Cube& other) const
   float a1 = angle_y * DEG2RAD;
   float a2 = other.get_angle() * DEG2RAD;
 
-  Vector2 c1 = { center.x, center.z };
+  Vector2 c1 = { position.x, position.z };
   Vector2 c2 = { other.get_position().x, other.get_position().z };
   Vector2 e1 = { half_extents.x, half_extents.z };
   Vector2 e2 = { other.get_size().x * 0.5f, other.get_size().z * 0.5f };
@@ -387,8 +378,7 @@ bool UserObject::check_collision_with_cube(const Cube& other) const
 
 bool UserObject::check_collision_with_sphere(const Sphere& other) const 
 {
-  Vector3 center = Vector3Add(position, local_center_offset);
-  Vector3 diff = Vector3Subtract(other.get_position(), center);
+  Vector3 diff = Vector3Subtract(other.get_position(), position);
   float angle_rad = angle_y * DEG2RAD;
   Vector3 local_diff = Vector3RotateByAxisAngle(diff, {0.0f, 1.0f, 0.0f}, -angle_rad);
 
